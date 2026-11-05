@@ -54,36 +54,25 @@ describe('seed', () => {
     expect(await db.skill.count({ where: { name: 'Java' } })).toBe(0);
   });
 
-  it('no inventa datos: skills ocultas sin nivel, y faltantes marcados como pendientes', async () => {
+  it('carga las skills con nivel y no inventa links: ningún proyecto tiene demo', async () => {
     await runSeed(db);
-    expect(
-      await db.skill.count({ where: { OR: [{ published: true }, { level: { not: null } }] } }),
-    ).toBe(0);
-    expect(await db.skill.findFirst({ where: { name: 'TypeScript' } })).not.toBeNull();
-    expect(
-      await db.project.count({
-        where: { OR: [{ demoUrl: { not: null } }, { repoUrl: { not: null } }] },
-      }),
-    ).toBe(0);
-
-    const pending = await findPendingContent(db);
-    expect(pending).toEqual(
-      expect.arrayContaining([
-        expect.stringContaining('Perfil · foto'),
-        expect.stringContaining('frase de valor'),
-        expect.stringContaining('Skills sin nivel'),
-        expect.stringContaining('CV backend: sin versión vigente'),
-      ]),
+    expect(await db.skill.count({ where: { OR: [{ published: false }, { level: null }] } })).toBe(
+      0,
     );
+    expect(await db.skill.findFirst({ where: { name: 'TypeScript' } })).toMatchObject({
+      level: 'INTERMEDIATE',
+    });
+    expect(await db.project.count({ where: { demoUrl: { not: null } } })).toBe(0);
   });
 
-  it('el proyecto del menú digital queda marcado como personal y con aviso de no afiliación', async () => {
+  it('el contenido inicial no deja pendientes visibles', async () => {
     await runSeed(db);
-    const menuDigital = await db.project.findUniqueOrThrow({
-      where: { slug: 'menu-digital' },
-      include: { translations: true },
-    });
-    expect(menuDigital.origin).toBe('PERSONAL');
-    expect(menuDigital.translations[0]?.disclaimer).toMatch(/sin afiliación con ninguna marca/);
+    // Solo falta lo que se carga por consola: la foto y los PDF del CV.
+    expect(await findPendingContent(db)).toEqual([
+      'Perfil · foto: falta',
+      'CV backend: sin versión vigente',
+      'CV mainframe: sin versión vigente',
+      'CV soporte: sin versión vigente',
+    ]);
   });
 });

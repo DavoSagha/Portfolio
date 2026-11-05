@@ -44,9 +44,9 @@ export async function runSeed(db: Db): Promise<SeedResult> {
           translations: { create: { locale: 'es', name: category.name } },
         },
       });
-      for (const [skillIndex, name] of category.skills.entries()) {
+      for (const [skillIndex, [name, level]] of category.skills.entries()) {
         const skill = await tx.skill.create({
-          data: { categoryId: created.id, name, order: skillIndex, level: null, published: false },
+          data: { categoryId: created.id, name, order: skillIndex, level, published: true },
         });
         skillIds.set(name, skill.id);
       }
@@ -59,6 +59,9 @@ export async function runSeed(db: Db): Promise<SeedResult> {
           slug: p.slug,
           status: 'PUBLISHED',
           featured: p.featured,
+          inProgress: p.inProgress,
+          stack: p.stack,
+          repoUrl: p.repoUrl,
           team: p.team,
           origin: p.origin,
           startDate: date(p.startDate),

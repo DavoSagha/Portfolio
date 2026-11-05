@@ -3,13 +3,13 @@ import type {
   LanguageLevel,
   ProjectOrigin,
   ProjectTeam,
+  SkillLevel,
   TimelineType,
 } from '../generated/prisma/enums.js';
-import { todo } from './placeholder.js';
 
 /*
- * Contenido inicial. Solo datos confirmados; lo que falta va como `todo(...)` o null
- * (ver docs/pendientes.md). Sin datos personales sensibles (DNI, teléfono, dirección).
+ * Contenido inicial, confirmado por el titular. Sin datos personales sensibles (DNI,
+ * teléfono, dirección). Lo que no está confirmado queda vacío o en null y no se muestra.
  */
 
 export const profile = {
@@ -17,47 +17,104 @@ export const profile = {
   location: 'CABA, Argentina',
   linkedinUrl: 'https://www.linkedin.com/in/david-saghatelyan',
   githubUrl: 'https://github.com/DavoSagha',
-  publicEmail: null,
-  showEmail: false,
+  publicEmail: 'saghatelyandsm@gmail.com',
+  showEmail: true,
   es: {
-    headline: 'Backend Developer Jr · JavaScript/TypeScript · Go · COBOL',
-    valueProp: todo('frase de valor'),
-    summary: todo('resumen profesional'),
-    availability: todo('disponibilidad'),
+    headline: 'Desarrollador Backend Jr | JavaScript, TypeScript, Go, COBOL',
+    valueProp:
+      'Desarrollo backend con JavaScript y Go, y tengo formación en COBOL para entornos mainframe.',
+    summary:
+      'Estudiante de Ingeniería en Sistemas de Información (UTN FRBA) orientado a backend. Desarrollé un módulo de CPU en Go y el inicio de sesión con Google de una PWA, y participé en una plataforma con Express y Zod. También tengo certificación en COBOL. Busco mi primera posición como desarrollador.',
+    availability:
+      'Busco mi primera posición en IT. Flexible en jornada y modalidad, en Argentina o remoto.',
   },
 };
 
-/** Las skills se cargan sin nivel y ocultas hasta que se confirme cada una. */
-export const skillCategories: { name: string; skills: string[] }[] = [
+const SOLID: SkillLevel = 'SOLID';
+const INTERMEDIATE: SkillLevel = 'INTERMEDIATE';
+const BASIC: SkillLevel = 'BASIC';
+
+/** Skills con su nivel confirmado, en el orden en que se muestran. Todas publicadas. */
+export const skillCategories: { name: string; skills: [name: string, level: SkillLevel][] }[] = [
   {
     name: 'Backend',
     skills: [
-      'JavaScript',
-      'TypeScript',
-      'Node.js',
-      'Express',
-      'Zod',
-      'Go',
-      'Java',
-      'Spring Boot',
-      'APIs REST',
-      'POO',
-      'MVC',
+      ['JavaScript', INTERMEDIATE],
+      ['TypeScript', INTERMEDIATE],
+      ['Node.js', BASIC],
+      ['Express', BASIC],
+      ['Zod', INTERMEDIATE],
+      ['Go', INTERMEDIATE],
+      ['Java', INTERMEDIATE],
+      ['Spring Boot', INTERMEDIATE],
+      ['APIs REST', INTERMEDIATE],
+      ['POO', SOLID],
+      ['MVC', BASIC],
     ],
   },
   {
     name: 'Mainframe',
-    skills: ['COBOL (z/OS, OS/390, Batch, CICS)', 'JCL', 'TSO/ISPF', 'QSAM', 'VSAM'],
+    skills: [
+      ['COBOL (z/OS, OS/390, Batch, CICS)', SOLID],
+      ['JCL', SOLID],
+      ['SORT', SOLID],
+      ['IDCAMS', SOLID],
+      ['TSO/ISPF', SOLID],
+      ['QSAM', SOLID],
+      ['VSAM', SOLID],
+    ],
   },
-  { name: 'Bases de datos', skills: ['SQL', 'MySQL', 'DB2'] },
-  { name: 'Lenguajes de sistemas y scripting', skills: ['C', 'Python'] },
+  {
+    name: 'Frontend',
+    skills: [
+      ['React', INTERMEDIATE],
+      ['Next.js', INTERMEDIATE],
+    ],
+  },
+  {
+    name: 'Bases de datos',
+    skills: [
+      ['SQL', INTERMEDIATE],
+      ['MySQL', INTERMEDIATE],
+      ['DB2', INTERMEDIATE],
+      ['PostgreSQL', BASIC],
+      ['Supabase', BASIC],
+    ],
+  },
+  {
+    name: 'Lenguajes de sistemas y scripting',
+    skills: [
+      ['C', INTERMEDIATE],
+      ['C++', INTERMEDIATE],
+      ['Python', INTERMEDIATE],
+    ],
+  },
   {
     name: 'Análisis y modelado',
-    skills: ['UML', 'DER', 'Cursogramas', 'Especificación de requerimientos'],
+    skills: [
+      ['UML', BASIC],
+      ['DER', INTERMEDIATE],
+      ['Cursogramas', INTERMEDIATE],
+      ['Especificación de requerimientos', INTERMEDIATE],
+    ],
   },
   {
     name: 'Herramientas y soporte',
-    skills: ['Linux/Bash', 'Git', 'Docker', 'Scrum', 'Diagnóstico y mantenimiento de hardware'],
+    skills: [
+      ['Git', INTERMEDIATE],
+      ['Linux/Bash', BASIC],
+      ['Docker', BASIC],
+      ['Scrum', BASIC],
+      ['Excel', INTERMEDIATE],
+      ['Armado y mantenimiento de PC', SOLID],
+    ],
+  },
+  {
+    name: 'Contenido y diseño',
+    skills: [
+      ['Canva', INTERMEDIATE],
+      ['CapCut', INTERMEDIATE],
+    ],
   },
 ];
 
@@ -65,106 +122,115 @@ interface SeedProject {
   slug: string;
   /** Destacado en el inicio. */
   featured: boolean;
-  team: ProjectTeam | null;
-  origin: ProjectOrigin | null;
+  /** "En desarrollo". */
+  inProgress: boolean;
+  team: ProjectTeam;
+  origin: ProjectOrigin;
   startDate: string | null;
   endDate: string | null;
+  /** Tecnologías que se muestran en la tarjeta (texto libre). */
+  stack: string[];
+  repoUrl: string | null;
+  /** Skills del perfil vinculadas al proyecto ("Usada en …" en la sección de skills). */
   skills: string[];
   es: {
     title: string;
     summary: string;
+    /** Aporte propio. Vacío = no se muestra. */
     role: string;
-    context: string;
-    problem: string;
-    solution: string;
-    architecture: string;
-    decisions: string;
-    challenges: string;
-    learnings: string;
+    context?: string;
+    problem?: string;
+    solution?: string;
+    architecture?: string;
+    decisions?: string;
+    challenges?: string;
+    learnings?: string;
     limitations?: string;
     disclaimer?: string;
   };
 }
 
-const pendingDetail = {
-  problem: todo('problema'),
-  solution: todo('solución'),
-  architecture: todo('arquitectura'),
-  decisions: todo('decisiones'),
-  challenges: todo('dificultades'),
-  learnings: todo('aprendizajes'),
-};
-
 /**
- * En el orden en que se muestran. demoUrl y repoUrl quedan en null hasta tenerlos.
- * Roles y descripciones: redacción de los CV, verificada contra el contenido acordado.
+ * En el orden en que se muestran; los destacados salen en el inicio en este mismo orden.
+ * Las secciones del detalle sin contenido confirmado se omiten y no se muestran.
+ * Ningún proyecto tiene demo por ahora: demoUrl queda en null.
  */
 export const projects: SeedProject[] = [
   {
     slug: 'appfut',
     featured: true,
+    inProgress: true,
     team: 'GROUP',
-    origin: null,
-    startDate: null,
-    endDate: null,
-    skills: [],
-    es: {
-      ...pendingDetail,
-      title: 'appFut',
-      summary:
-        'PWA mobile first para organizar partidos de fútbol, con gestión de jugadores, pagos y suplentes.',
-      role: 'Implementé el inicio de sesión con Google, la parte más compleja del proyecto. Desarrollé la interfaz y la creación de partidos con código y link de invitación, para sumarse, darse de baja o cambiar de equipo desde cualquier dispositivo con solo ingresar el nombre.',
-      context: todo('contexto y stack'),
-      decisions:
-        'Acceso solo con el nombre: una decisión para reducir la fricción al sumarse a un partido.',
-      challenges: 'El inicio de sesión con Google fue la parte más compleja.',
-      limitations: 'El acceso solo con el nombre no verifica la identidad de quien se suma.',
-    },
-  },
-  {
-    slug: 'menu-digital',
-    featured: false,
-    team: null,
     origin: 'PERSONAL',
     startDate: null,
     endDate: null,
-    skills: [],
+    stack: [
+      'Next.js 16',
+      'React 19',
+      'TypeScript',
+      'Tailwind',
+      'Supabase (Postgres, Auth, Storage, RLS)',
+      'Vitest',
+    ],
+    repoUrl: 'https://github.com/DavoSagha/appfut',
+    skills: ['TypeScript', 'React', 'Next.js', 'PostgreSQL', 'Supabase'],
     es: {
-      ...pendingDetail,
-      title: 'Menú digital',
-      summary: 'PWA de menú digital con soporte multilenguaje y asistente de chat con IA.',
-      role: 'Desarrollé el producto y lo ofrecí a la cadena por iniciativa propia (no fue contratado).',
-      context: todo('contexto y stack'),
+      title: 'appFut',
+      summary:
+        'PWA mobile first para organizar partidos de fútbol, con gestión de jugadores, pagos y suplentes.',
+      role: 'Desarrollé la interfaz, la creación de partidos con código y link de invitación, y el inicio de sesión con Google. El flujo para sumarse, darse de baja o cambiar de equipo lo hicimos en conjunto.',
+    },
+  },
+  {
+    slug: 'carta-digital-catedral-del-pisco',
+    featured: true,
+    inProgress: false,
+    team: 'GROUP',
+    origin: 'PERSONAL',
+    startDate: null,
+    endDate: null,
+    stack: ['React 19', 'Vite', 'Express', 'Supabase', 'API de Gemini'],
+    repoUrl: 'https://github.com/DavoSagha/menucatedralpisco',
+    skills: ['React', 'Express', 'Supabase'],
+    es: {
+      title: 'Carta digital para La Catedral del Pisco',
+      summary:
+        'Carta digital en español, inglés, portugués y ruso, con panel de administración y asistente de chat con IA.',
+      role: '',
       disclaimer:
-        'Proyecto personal sin afiliación con ninguna marca. No fue contratado ni implementado por ninguna empresa.',
+        'Proyecto personal ofrecido al restaurante. No fue contratado ni implementado, y no tiene afiliación con La Catedral del Pisco.',
     },
   },
   {
     slug: 'sweet-medical',
-    featured: true,
-    team: null,
+    featured: false,
+    inProgress: false,
+    team: 'GROUP',
     origin: 'ACADEMIC',
     startDate: '2026-03-01',
     endDate: '2026-07-01',
+    stack: ['Express', 'Arquitectura por capas', 'Zod', 'Endpoints REST'],
+    repoUrl: null,
     skills: ['Express', 'Zod', 'APIs REST'],
     es: {
-      ...pendingDetail,
       title: 'Sweet Medical',
       summary: 'Plataforma de gestión de turnos médicos.',
-      role: 'Desarrollé controladores y servicios en Express con arquitectura por capas, validación de esquemas con Zod y endpoints REST con consultas a la base de datos.',
+      role: 'Implementé la paginación de turnos, que antes se cargaban en una lista interminable, y una vista de administración para agregar o eliminar doctores y pacientes.',
       context: 'Proyecto académico de UTN FRBA, de marzo a julio de 2026.',
     },
   },
   {
     slug: 'simulador-sistema-operativo',
     featured: false,
-    team: null,
+    inProgress: false,
+    team: 'GROUP',
     origin: 'ACADEMIC',
     startDate: '2025-03-01',
     endDate: '2025-07-01',
+    stack: ['Go'],
+    repoUrl: null,
     skills: ['Go'],
     es: {
-      ...pendingDetail,
       title: 'Simulador de sistema operativo',
       summary: 'Simulador de un sistema operativo desarrollado en Go.',
       role: 'Desarrollé el módulo de CPU que interpreta y ejecuta instrucciones assembler, y resolví la deserialización de las instrucciones enviadas por el scheduler.',
@@ -174,13 +240,15 @@ export const projects: SeedProject[] = [
   {
     slug: 'formacion-mainframe',
     featured: true,
-    team: null,
+    inProgress: false,
+    team: 'INDIVIDUAL',
     origin: 'ACADEMIC',
     startDate: '2025-05-01',
     endDate: '2025-11-01',
-    skills: ['COBOL (z/OS, OS/390, Batch, CICS)', 'JCL', 'QSAM', 'VSAM'],
+    stack: ['COBOL', 'CICS', 'JCL', 'SORT', 'IDCAMS', 'QSAM', 'VSAM'],
+    repoUrl: null,
+    skills: ['COBOL (z/OS, OS/390, Batch, CICS)', 'JCL', 'SORT', 'IDCAMS', 'QSAM', 'VSAM'],
     es: {
-      ...pendingDetail,
       title: 'Formación mainframe',
       summary:
         'Rutinas COBOL Batch y CICS, reportes por consola y spool, JCL con SORT/IDCAMS y control de MAXCC, y archivos QSAM/VSAM.',

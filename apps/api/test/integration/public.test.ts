@@ -39,17 +39,21 @@ describe('API pública con el contenido del seed', () => {
     await runSeed(db);
   });
 
-  it('home devuelve perfil, destacados y secciones; oculta el email y las skills sin confirmar', async () => {
+  it('home devuelve perfil, destacados en orden y secciones', async () => {
     const res = await request(ctx.app).get('/api/v1/public/home');
     expect(res.status).toBe(200);
     expect(res.body.locale).toBe('es');
     expect(res.body.availableLocales).toEqual(['es']);
     expect(res.body.profile.fullName).toBe('David Saghatelyan');
-    expect(res.body.profile.publicEmail).toBeNull();
+    expect(res.body.profile).toMatchObject({
+      headline: 'Desarrollador Backend Jr | JavaScript, TypeScript, Go, COBOL',
+      location: 'CABA, Argentina',
+      publicEmail: 'saghatelyandsm@gmail.com',
+    });
     expect(res.body.cv).toEqual({ primaryUrl: null, profiles: [] });
     expect(res.body.featuredProjects.map((p: { slug: string }) => p.slug)).toEqual([
       'appfut',
-      'sweet-medical',
+      'carta-digital-catedral-del-pisco',
       'formacion-mainframe',
     ]);
     const all = await request(ctx.app).get('/api/v1/public/projects');
@@ -57,27 +61,34 @@ describe('API pública con el contenido del seed', () => {
     expect(res.body.sections).toEqual({
       projects: true,
       timeline: true,
-      skills: false,
+      skills: true,
       languages: true,
       contact: true,
     });
   });
 
   it('muestra el email solo si está habilitado', async () => {
-    await db.profile.update({
-      where: { id: 1 },
-      data: { publicEmail: 'contacto@ejemplo.com', showEmail: true },
-    });
+    await db.profile.update({ where: { id: 1 }, data: { showEmail: false } });
     const res = await request(ctx.app).get('/api/v1/public/home');
-    expect(res.body.profile.publicEmail).toBe('contacto@ejemplo.com');
-    await db.profile.update({ where: { id: 1 }, data: { publicEmail: null, showEmail: false } });
+    expect(res.body.profile.publicEmail).toBeNull();
+    await db.profile.update({ where: { id: 1 }, data: { showEmail: true } });
   });
 
   it('el detalle de proyecto incluye las secciones; un borrador responde 404', async () => {
     const ok = await request(ctx.app).get('/api/v1/public/projects/appfut');
     expect(ok.status).toBe(200);
-    expect(ok.body).toMatchObject({ slug: 'appfut', team: 'GROUP', title: 'appFut' });
-    expect(ok.body.limitations).toMatch(/no verifica la identidad/);
+    expect(ok.body).toMatchObject({
+      slug: 'appfut',
+      team: 'GROUP',
+      origin: 'PERSONAL',
+      inProgress: true,
+      title: 'appFut',
+      repoUrl: 'https://github.com/DavoSagha/appfut',
+      demoUrl: null,
+    });
+    expect(ok.body.stack).toContain('Supabase (Postgres, Auth, Storage, RLS)');
+    // Las secciones sin contenido confirmado vuelven en null y la web no las muestra.
+    expect(ok.body.problem).toBeNull();
 
     await db.project.update({ where: { slug: 'appfut' }, data: { status: 'DRAFT' } });
     expect((await request(ctx.app).get('/api/v1/public/projects/appfut')).status).toBe(404);
@@ -92,29 +103,32 @@ describe('API pública con el contenido del seed', () => {
     expect(res.body.error.code).toBe('VALIDATION_ERROR');
   });
 
-  it('las skills aparecen solo al publicarse, con sus proyectos publicados', async () => {
-    await db.skill.updateMany({
-      where: { name: 'Go' },
-      data: { level: 'INTERMEDIATE', published: true },
-    });
+  it('las skills publicadas incluyen su nivel y los proyectos publicados que las usan', async () => {
     const res = await request(ctx.app).get('/api/v1/public/skills');
-    expect(res.body).toEqual([
-      {
-        category: 'Backend',
-        skills: [
-          {
-            name: 'Go',
-            level: 'INTERMEDIATE',
-            projects: [
-              { slug: 'simulador-sistema-operativo', title: 'Simulador de sistema operativo' },
-            ],
-          },
-        ],
-      },
-    ]);
-    const card = await request(ctx.app).get('/api/v1/public/projects/simulador-sistema-operativo');
-    expect(card.body.skills).toEqual([{ name: 'Go' }]);
-    await db.skill.updateMany({ where: { name: 'Go' }, data: { level: null, published: false } });
+    const categories = res.body.map((c: { category: string }) => c.category);
+    expect(categories.at(-1)).toBe('Contenido y diseño');
+    const go = res.body
+      .flatMap((c: { skills: unknown[] }) => c.skills)
+      .find((s: { name: string }) => s.name === 'Go');
+    expect(go).toEqual({
+      name: 'Go',
+      level: 'INTERMEDIATE',
+      projects: [{ slug: 'simulador-sistema-operativo', title: 'Simulador de sistema operativo' }],
+    });
+
+    await db.skill.updateMany({ where: { name: 'Go' }, data: { published: false } });
+    const hidden = await request(ctx.app).get('/api/v1/public/skills');
+    expect(JSON.stringify(hidden.body)).not.toContain('"Go"');
+    await db.skill.updateMany({ where: { name: 'Go' }, data: { published: true } });
+  });
+
+  it('la carta digital lleva el aviso de no afiliación y no muestra un aporte vacío', async () => {
+    const res = await request(ctx.app).get(
+      '/api/v1/public/projects/carta-digital-catedral-del-pisco',
+    );
+    expect(res.status).toBe(200);
+    expect(res.body.disclaimer).toMatch(/no tiene afiliación con La Catedral del Pisco/);
+    expect(res.body.role).toBeNull();
   });
 
   it('la trayectoria se ordena por fecha descendente y vincula la certificación COBOL', async () => {
