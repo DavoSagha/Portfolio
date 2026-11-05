@@ -18,6 +18,8 @@ export class AppError extends Error {
     readonly code: ErrorCode,
     message: string,
     readonly details?: unknown,
+    /** Segundos para reintentar; se envía en la cabecera Retry-After. */
+    readonly retryAfterSeconds?: number,
   ) {
     super(message);
     this.name = 'AppError';
@@ -26,6 +28,19 @@ export class AppError extends Error {
 
 export const notFound = (message = 'Recurso no encontrado') =>
   new AppError(404, 'NOT_FOUND', message);
+
+/** Mismo mensaje para cualquier fallo de credenciales: no dice cuál de los dos datos falló. */
+export const invalidCredentials = () =>
+  new AppError(401, 'UNAUTHENTICATED', 'Usuario o contraseña incorrectos');
+
+export const tooManyAttempts = (retryAfterSeconds: number) =>
+  new AppError(
+    429,
+    'RATE_LIMITED',
+    'Demasiados intentos. Probá más tarde.',
+    undefined,
+    retryAfterSeconds,
+  );
 
 export const notFoundHandler: RequestHandler = (_req, _res, next) => {
   next(notFound('Ruta no encontrada'));
@@ -43,6 +58,7 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     return;
   }
   if (err instanceof AppError) {
+    if (err.retryAfterSeconds) res.set('Retry-After', String(err.retryAfterSeconds));
     res.status(err.status).json({
       error: {
         code: err.code,

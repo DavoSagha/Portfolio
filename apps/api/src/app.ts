@@ -2,6 +2,12 @@ import express, { Router, type Express } from 'express';
 import helmet from 'helmet';
 import type { Db } from './db/client.js';
 import { errorHandler, notFoundHandler } from './http/errors.js';
+import { AuthController } from './modules/auth/auth.controller.js';
+import { AuthRepository } from './modules/auth/auth.repository.js';
+import { authRoutes } from './modules/auth/auth.routes.js';
+import { AuthService } from './modules/auth/auth.service.js';
+import { LoginThrottle } from './modules/auth/login-throttle.js';
+import { Sessions } from './modules/auth/sessions.js';
 import { CvController } from './modules/cv/cv.controller.js';
 import { CvRepository } from './modules/cv/cv.repository.js';
 import { CvService } from './modules/cv/cv.service.js';
@@ -43,6 +49,14 @@ export function createApp({ db, storage }: AppDeps): Express {
   const cv = new CvController(cvService);
   const files = new FilesController(new FilesRepository(db), storage);
   const publicController = new PublicController(new PublicService(new PublicRepository(db)));
+  const authRepository = new AuthRepository(db);
+  const auth = new AuthController(
+    new AuthService(
+      authRepository,
+      new Sessions(authRepository),
+      new LoginThrottle(authRepository),
+    ),
+  );
 
   const v1 = Router();
   v1.get('/health', async (_req, res) => {
@@ -50,6 +64,7 @@ export function createApp({ db, storage }: AppDeps): Express {
     res.json({ status: 'ok' });
   });
   v1.use('/public', publicRoutes(publicController));
+  v1.use('/auth', authRoutes(auth));
   app.use('/api/v1', v1);
 
   app.get('/cv', cv.primary);
