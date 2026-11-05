@@ -4,6 +4,8 @@ import { DEFAULT_LOCALE, pickTranslation, toDateString } from '../../lib/locale.
 import type { PublicProject, PublicRepository } from './public.repository.js';
 
 const fileUrl = (fileId: string | null) => (fileId ? `/files/${fileId}` : null);
+/** Un texto vacío o solo con espacios es una sección sin contenido: se devuelve null y no se muestra. */
+const text = (value: string | null | undefined) => (value?.trim() ? value : null);
 
 /** Arma las respuestas públicas (contratos en docs/api.md) a partir de los datos publicados. */
 export class PublicService {
@@ -64,14 +66,14 @@ export class PublicService {
     const t = pickTranslation(project.translations, locale);
     return {
       ...this.toCard(project, locale),
-      context: t?.context ?? null,
-      problem: t?.problem ?? null,
-      solution: t?.solution ?? null,
-      architecture: t?.architecture ?? null,
-      decisions: t?.decisions ?? null,
-      challenges: t?.challenges ?? null,
-      learnings: t?.learnings ?? null,
-      limitations: t?.limitations ?? null,
+      context: text(t?.context),
+      problem: text(t?.problem),
+      solution: text(t?.solution),
+      architecture: text(t?.architecture),
+      decisions: text(t?.decisions),
+      challenges: text(t?.challenges),
+      learnings: text(t?.learnings),
+      limitations: text(t?.limitations),
       startDate: toDateString(project.startDate),
       endDate: toDateString(project.endDate),
       images: project.images.map((img) => ({
@@ -92,7 +94,7 @@ export class PublicService {
         startDate: toDateString(e.startDate),
         endDate: toDateString(e.endDate),
         datePrecision: e.datePrecision,
-        description: t?.description ?? null,
+        description: text(t?.description),
         credentialUrl: e.credentialUrl,
         relatedProjectSlug: e.relatedProject?.status === 'PUBLISHED' ? e.relatedProject.slug : null,
       };
@@ -131,7 +133,9 @@ export class PublicService {
       slug: project.slug,
       title: t?.title ?? project.slug,
       summary: t?.summary ?? '',
-      role: t?.role ?? '',
+      role: text(t?.role),
+      inProgress: project.inProgress,
+      stack: project.stack,
       team: project.team,
       origin: project.origin,
       featured: project.featured,
@@ -139,7 +143,7 @@ export class PublicService {
       demoUrl: project.demoUrl,
       repoUrl: project.repoUrl,
       coverUrl: fileUrl(project.coverFileId),
-      disclaimer: t?.disclaimer ?? null,
+      disclaimer: text(t?.disclaimer),
     };
   }
 }

@@ -207,6 +207,11 @@ model Project {
   origin          ProjectOrigin?
   startDate       DateTime?            @db.Date
   endDate         DateTime?            @db.Date
+  /// Proyecto en desarrollo: se muestra con la etiqueta "En desarrollo".
+  inProgress      Boolean              @default(false)
+  /// Tecnologías del proyecto, en el orden en que se muestran. Texto libre: incluye
+  /// herramientas que no son skills del perfil (Vite, Vitest, Tailwind…).
+  stack           String[]             @default([])
   demoUrl         String?
   repoUrl         String?
   coverFileId     String?
