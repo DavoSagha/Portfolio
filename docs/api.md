@@ -200,7 +200,7 @@ Body: `{ "username": "…", "password": "…" }`
 
 - **Éxito:** `200 { "csrfToken": "…" }` + `Set-Cookie: sid=…; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800`.
 - **Error:** `401 UNAUTHENTICATED` con el mismo mensaje, exista o no el usuario. Argon2 se ejecuta siempre (contra un hash ficticio si el usuario no existe), así que el tiempo de respuesta tampoco delata nada.
-- **Bloqueo:** `429` con `Retry-After`.
+- **Bloqueo:** `429` con `Retry-After`, tras 5 fallos del mismo usuario e IP (15 min) o 20 intentos desde la misma IP (15 min).
 - **Fijación de sesión:** el login revoca la sesión previa de la cookie, si existía, y crea una nueva.
 
 ### `POST /auth/logout`

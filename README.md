@@ -55,6 +55,19 @@ docker compose exec api node dist/cli/photo-import.js --file /tmp/foto.jpg
 
 La imagen se valida (JPG, PNG o WebP, hasta 5 MB) y se guarda como WebP, sin metadatos (EXIF, GPS).
 
+### Administrador
+
+No hay registro por la web. Los dos comandos piden los datos en la terminal, sin eco:
+
+```bash
+# Crea el único administrador. Falla si ya existe uno.
+docker compose exec -it api node dist/cli/admin-create.js
+# Cambia la contraseña y revoca todas las sesiones.
+docker compose exec -it api node dist/cli/admin-password.js
+```
+
+Fuera de Docker: `npm run admin:create -w apps/api` y `npm run admin:password -w apps/api`.
+
 ### Contenido pendiente
 
 Los datos que todavía faltan se ven resaltados en el sitio (`TODO: …`). Para listarlos:

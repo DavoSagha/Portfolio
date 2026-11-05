@@ -1,6 +1,6 @@
 # Seguridad
 
-> Estado: borrador de la Fase 0. Describe las medidas **previstas**. Cada fase marca lo implementado y lo verificado con tests, y la Fase 5 incluye una revisión completa.
+> Estado: las medidas de las Fases 1 y 2 están implementadas y cubiertas por pruebas. Las demás están **previstas**. La Fase 5 incluye una revisión completa.
 
 ## Activos
 
@@ -40,6 +40,33 @@
 | Errores que filtran información             | Respuesta 500 genérica. El detalle va solo al log, sin contraseñas ni tokens.                                                                                                                                                                                    | 1    |
 | Pérdida de datos                            | Backups automáticos de la base (`pg_dump`) y del volumen de archivos a un destino externo, con una restauración probada y documentada.                                                                                                                           | 5    |
 | Dependencias vulnerables                    | Lockfile versionado, `npm audit` en CI y actualizaciones revisadas en cada fase.                                                                                                                                                                                 | 1    |
+
+## Flujo del login
+
+`POST /api/v1/auth/login`. El orden de los pasos es parte de la defensa.
+
+| Paso | Qué hace                                                              | Qué protege                                                                          |
+| ---- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| 1    | Límite general por IP (20 intentos cada 15 min)                       | Prueba de muchos usuarios desde una IP y abuso de CPU con Argon2                     |
+| 2    | Valida el body con Zod: textos no vacíos y con largo máximo           | Tipos inesperados y contraseñas enormes. Sin mínimo: no revela la política de claves |
+| 3    | Consulta el bloqueo por usuario + IP; si está activo, 429             | Fuerza bruta. Va antes de Argon2, y bloquea aunque la clave sea correcta             |
+| 4    | Busca al usuario y corre Argon2, contra un hash ficticio si no existe | Enumeración de usuarios por tiempo de respuesta                                      |
+| 5    | Si falla, suma el fallo y responde 401 con un único mensaje           | Enumeración por contenido y por comportamiento del bloqueo                           |
+| 6    | Si es correcta, limpia los fallos y revoca la cookie previa           | Fijación de sesión                                                                   |
+| 7    | Crea un token nuevo y guarda solo su SHA-256                          | Robo de la base: con el hash no se puede usar la sesión                              |
+
+Después del login:
+
+- **Cada request privada:** `requireSession` rechaza con el mismo 401 una sesión inexistente, revocada, vencida (7 días) o inactiva (2 h).
+- **Cada escritura:** `requireCsrf` exige `X-CSRF-Token` igual al de la sesión, comparado en tiempo constante.
+- **Rutas `/admin`:** la barrera está en el router, así que una ruta nueva nace protegida.
+- **`POST /auth/login` no lleva token CSRF:** todavía no hay sesión. Otro sitio no puede enviar el JSON: un formulario no genera ese tipo de contenido, y `fetch` requiere una autorización CORS que la API no da.
+
+### Riesgos aceptados
+
+- **Ataque distribuido:** muchas IP contra un usuario no chocan con el bloqueo por usuario + IP. Lo mitigan la contraseña de 12 caracteres como mínimo y el costo de Argon2.
+- **Intentos simultáneos:** varios pueden pasar la consulta del bloqueo antes de que se registre el primer fallo. El contador no pierde ninguno, y el límite por IP acota cuántos son.
+- **Límite por IP en memoria:** se reinicia con el proceso y es por instancia. Alcanza porque hay una sola instancia y el bloqueo persistente está en la base.
 
 ## IP real del cliente
 

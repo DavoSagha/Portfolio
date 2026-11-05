@@ -258,3 +258,20 @@ Verificadas con `npm view` (2026-11) y fijadas exactas (`save-exact`), con el lo
   - Derivar el stack de `ProjectSkill`: obligaría a crear skills para herramientas que no se quieren mostrar como skills.
   - Un enumerado de estado (en desarrollo, terminado, pausado): no hace falta por ahora; un booleano alcanza y se puede ampliar.
 - **Motivo:** mostrar solo contenido real, sin inventar textos para completar secciones.
+
+## D-030. Detalles de la autenticación
+
+- **Decisión:**
+  - **Nombres de usuario:** se normalizan (minúsculas, sin espacios) al crear, al buscar y en la clave de bloqueo. Cambiar mayúsculas no reinicia el contador de fallos.
+  - **Largo de la contraseña:** de 12 a 1024 caracteres al crearla. El login solo aplica el máximo: un mínimo daría 400 en vez de 401, revelaría la política y no sumaría fallos.
+  - **Conteo de fallos:** se suma con una sola sentencia SQL (`INSERT … ON CONFLICT`), para no perder fallos entre intentos simultáneos.
+  - **Límite por IP:** 20 intentos de login cada 15 minutos, con `express-rate-limit`, en memoria.
+  - **Actividad de la sesión:** `lastSeenAt` se actualiza como máximo una vez por minuto, para no escribir en la base en cada request.
+  - **Limpieza:** cada hora se borran las sesiones y los bloqueos vencidos hace más de un día.
+  - **Script de instalación de `argon2`:** bloqueado en `allowScripts`. El paquete trae binarios precompilados y no hace falta compilar.
+  - **Rutas de `/admin`:** todavía no hay recursos. Las barreras se prueban sobre el router, y la Fase 3 agrega los recursos detrás de ellas.
+- **Alternativas:**
+  - Un contador en dos pasos (leer y escribir): dos intentos simultáneos contarían como uno.
+  - Compilar `argon2` en la imagen: suma herramientas de compilación y un script de instalación sin ganar nada.
+  - Guardar el límite por IP en la base: una escritura más por intento, cuando el bloqueo persistente ya está ahí.
+- **Motivo:** cada punto cierra un caso concreto de evasión o de crecimiento sin límite, con el menor código posible.
