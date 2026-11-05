@@ -72,6 +72,12 @@ export const notFoundHandler: RequestHandler = (_req, _res, next) => {
 };
 
 export const errorHandler: ErrorRequestHandler = (rawErr, _req, res, _next) => {
+  // El cliente cortó la conexión a mitad de un archivo: no hay a quién responderle.
+  const { code } = (rawErr ?? {}) as { code?: unknown };
+  if (code === 'ERR_STREAM_PREMATURE_CLOSE' || code === 'ERR_STREAM_UNABLE_TO_PIPE') {
+    res.destroy();
+    return;
+  }
   const err: unknown = knownLibraryError(rawErr) ?? rawErr;
   if (err instanceof ZodError) {
     res.status(400).json({
