@@ -34,9 +34,7 @@ Destacados en el inicio, en este orden: appFut, Carta digital para La Catedral d
 
 ## Infraestructura (Fase 5)
 
-- [ ] Proveedor de VPS (propuesta con costo en la Fase 5).
-- [ ] Dominio (propuesta en la Fase 5).
-- [ ] Destino externo de los backups.
+- [ ] Contratar el VPS, el dominio y el destino externo de los backups. Propuesta y pasos en [deploy](deploy.md).
 - [ ] Cuenta de Gmail y contraseña de aplicación para el SMTP (Fase 4). Nunca se versionan.
 
 ## Técnicos
@@ -45,9 +43,10 @@ Destacados en el inicio, en este orden: appFut, Carta digital para La Catedral d
 - [x] Documentar la instalación desde cero en el README.
 - [x] Registro de eventos (`CV_DOWNLOAD`, visitas) y exclusión de las visitas del admin.
 - [ ] Probar el envío real con la cuenta de Gmail cuando exista la contraseña de aplicación.
-- [ ] Aviso de `pg` en los logs ("client.query() when the client is already executing a query"): revisar antes de actualizar a `pg` 9.
-- [ ] Definir cuánto tiempo se conservan los eventos y los mensajes (hoy no se borran solos).
+- [x] Aviso de `pg` en los logs: las lecturas con `include` salieron de las transacciones.
+- [x] Retención: eventos por 12 meses y mensajes hasta borrarlos ([D-035](decisiones.md#d-035-retención-de-datos)).
 - [x] Al reemplazar la foto, la portada o una imagen, borrar el archivo anterior.
-- [ ] CSP de la web con nonce y revisión de cabeceras (Fase 5). La API ya tiene la CSP más estricta.
+- [x] CSP de la web con nonce y revisión de cabeceras ([D-036](decisiones.md#d-036-csp-de-la-web-con-nonce)).
 - [ ] 8 vulnerabilidades moderadas en herramientas de desarrollo (`minimatch`, vía plugins de ESLint). No afectan a producción (`npm audit --omit=dev` da 0). Revisar cuando los plugins publiquen versiones compatibles, sin forzar.
-- [ ] Completar el respaldo y la recuperación de secretos en [seguridad](seguridad.md) (Fase 5).
+- [x] Respaldo y recuperación de secretos en [seguridad](seguridad.md#secretos-respaldo-y-recuperación).
+- [ ] Repetir Lighthouse con el sitio publicado.

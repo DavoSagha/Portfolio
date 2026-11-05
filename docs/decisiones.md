@@ -341,3 +341,31 @@ Verificadas con `npm view` (2026-11) y fijadas exactas (`save-exact`), con el lo
   - **Límite de eventos:** es por IP, así que una red compartida puede perder eventos si supera los 60 por minuto.
   - **Bots:** los que ejecutan JavaScript se cuentan como visitas.
 - **Motivo:** cumple "sin cookies de seguimiento y sin IP en crudo", y una falla de email o de métricas nunca afecta a quien visita el sitio.
+
+## D-035. Retención de datos
+
+- **Decisión:** los eventos de métricas se borran a los 12 meses, con la tarea periódica de la API. Los mensajes de contacto se conservan hasta que el administrador los borre.
+- **Alternativas:** borrar los eventos por `cron` en el servidor, o agregarlos antes de borrarlos.
+- **Motivo:** los eventos pierden utilidad con el tiempo y no hace falta guardarlos indefinidamente. La tarea ya existía para las sesiones, así que no suma infraestructura. Un backup puede conservar eventos por encima de los 12 meses hasta que rote: 90 días como máximo.
+
+## D-036. CSP de la web con nonce
+
+- **Decisión:** `proxy.ts` genera un nonce en cada request y arma la CSP. `script-src` usa el nonce y `strict-dynamic`, sin `unsafe-inline`. `style-src` mantiene `unsafe-inline`, para los estilos en línea.
+- **Alternativas:** una CSP por hash, que no sirve para los scripts que Next genera en cada render, o `unsafe-inline`, que anula la protección.
+- **Motivo:** un XSS no puede ejecutar scripts aunque llegue al HTML. No tiene costo de caché, porque las páginas ya se renderizan en cada request (D-005). Un estilo en línea no ejecuta código, y evitarlo obligaría a reescribir el gráfico.
+
+## D-037. Backups cifrados con clave pública
+
+- **Decisión:**
+  - Un servicio de Docker hace un `pg_dump` y empaqueta los archivos, con sumas de verificación, en un solo archivo cifrado con `age`. Corre por `cron` y copia al destino externo con `rclone`.
+  - El servidor tiene solo la clave pública. La privada vive en el gestor de contraseñas.
+  - La restauración verifica clave, sumas y dump antes de tocar nada, pide confirmación y aplica la base en una sola transacción.
+  - `npm run test:restore` prueba el ciclo completo con la configuración de producción: borra todos los volúmenes, restaura y compara.
+- **Alternativas:** los backups del proveedor del VPS, que no están fuera de su cuenta ni permiten restaurar solo la aplicación, o cifrar con una clave simétrica, que tendría que estar en el servidor.
+- **Motivo:** los backups tienen mensajes de terceros y el hash de la contraseña. Con clave pública, comprometer el servidor no expone las copias anteriores. Y un backup sin restauración probada no es un backup.
+- **Limitación:** el cifrado de la base es solo del backup: en el servidor, los datos están sin cifrar.
+
+## D-038. Imágenes sin npm
+
+- **Decisión:** las imágenes de ejecución eliminan `npm` y `npx`. La API aplica las migraciones llamando directamente a la CLI de Prisma.
+- **Motivo:** no se usan en ejecución. Quitarlos eliminó todas las vulnerabilidades de severidad alta con parche que encontró `trivy`, y deja menos herramientas a mano si alguien entra al contenedor.

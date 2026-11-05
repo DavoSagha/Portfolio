@@ -120,7 +120,21 @@ El CI (GitHub Actions) ejecuta todo lo anterior y además:
 
 ## Producción
 
-Se documenta en la Fase 5: VPS, dominio, HTTPS automático con Caddy y backups. Con `APP_ENV=production`:
+Los pasos completos, la comparación de proveedores y lo que falta probar están en [docs/deploy.md](docs/deploy.md).
 
-- la API se niega a arrancar con la contraseña de ejemplo o con `SITE_URL` sin https;
-- el seed no se ejecuta al arrancar.
+```sh
+docker compose -f compose.yaml -f compose.prod.yaml up -d --build
+```
+
+Con `compose.prod.yaml`:
+
+- compose no arranca si falta una variable obligatoria;
+- la API no arranca con la contraseña de ejemplo o con `SITE_URL` sin https;
+- el seed no corre solo;
+- Caddy obtiene el certificado TLS para `SITE_ADDRESS`;
+- un servicio hace backups cifrados cada día.
+
+```sh
+npm run test:restore            # backup y restauración de punta a punta, en un stack aislado
+bash scripts/https-smoke-test.sh # HTTPS con la CA interna de Caddy
+```

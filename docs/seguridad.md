@@ -1,6 +1,6 @@
 # Seguridad
 
-> Estado: las medidas de las Fases 1 a 4 están implementadas y cubiertas por pruebas. Las demás están **previstas**. La Fase 5 incluye una revisión completa.
+> Estado: las medidas de las Fases 1 a 5 están implementadas y cubiertas por pruebas, salvo lo que requiere el servidor real (ver [qué está probado](deploy.md#qué-está-probado)).
 
 ## Activos
 
@@ -83,9 +83,41 @@ Cliente ──► Caddy (único puerto expuesto) ──► API (red interna de D
 
 ## Secretos: respaldo y recuperación
 
-Se completa en la Fase 5. Lineamientos:
+| Secreto                | Dónde vive                                        | Si se pierde                            | Si se filtra                                                                                                             |
+| ---------------------- | ------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `POSTGRES_PASSWORD`    | `.env` del servidor y gestor de contraseñas       | Se puede cambiar con acceso al servidor | Cambiarla en la base y en el `.env`. La base no publica puertos.                                                         |
+| Clave privada de `age` | **Solo** en el gestor de contraseñas              | **Los backups no se pueden recuperar**  | Generar otra clave y cambiar `BACKUP_AGE_RECIPIENT`. Los backups viejos quedan expuestos: borrarlos del destino externo. |
+| `SMTP_PASS`            | `.env` del servidor y gestor de contraseñas       | Crear otra contraseña de aplicación     | Revocarla en la cuenta de Google y crear otra.                                                                           |
+| `rclone.conf`          | Servidor (permisos `600`) y gestor de contraseñas | Crear otra clave en el proveedor        | Revocarla en el proveedor. Los backups siguen cifrados.                                                                  |
+| Contraseña del panel   | Gestor de contraseñas. En la base, solo su hash   | `admin:password` desde el servidor      | `admin:password`, que además revoca todas las sesiones.                                                                  |
 
-- **Cuáles son:** `DATABASE_URL` / `POSTGRES_PASSWORD`, credenciales SMTP y credenciales del destino de backups.
-- **Dónde viven:** solo en el `.env` del servidor (permisos `600`) y en un gestor de contraseñas personal como copia de respaldo.
-- **Rotación:** cambiar el valor en el `.env` y reiniciar el servicio. La contraseña del admin se cambia con `admin:password`, que revoca las sesiones.
-- **Recuperación:** con el gestor de contraseñas y el backup externo alcanza para reconstruir el servidor desde cero. El procedimiento se prueba en la Fase 5.
+- **Rotación:** cambiar el valor en el `.env` y aplicar con `docker compose up -d`.
+- **Recuperación total:** con el gestor de contraseñas y el backup externo alcanza para reconstruir el servidor desde cero ([procedimiento](deploy.md#restaurar-un-backup)). Se probó en local borrando todos los volúmenes.
+
+## Revisión de seguridad (Fase 5)
+
+Hecha el 5 de noviembre de 2026, sobre el código y las imágenes locales. No reemplaza una auditoría externa ni incluye pruebas contra el servidor real.
+
+| Revisión                              | Resultado                                                                                                                                                                                                                                                                             |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Secretos en el repo y en su historial | `gitleaks` 8.28.0: 52 commits, sin hallazgos. `docs/spec.md`, `private/` y `.env` nunca se commitearon.                                                                                                                                                                               |
+| Dependencias de producción            | `npm audit --omit=dev`: 0 vulnerabilidades.                                                                                                                                                                                                                                           |
+| Dependencias de desarrollo            | 8 moderadas en herramientas de lint. No llegan a producción.                                                                                                                                                                                                                          |
+| Imágenes Docker (`trivy`)             | **Corregido:** las de severidad alta con parche venían del `npm` de la imagen base, que ya no está en las imágenes. **Aceptado:** quedan 45 altas en paquetes de Debian sin parche publicado, casi todas de `util-linux` y de escalada local. Reconstruir las imágenes las actualiza. |
+| Usuarios de los contenedores          | La API y la web corren como `node`, sin privilegios, y con `no-new-privileges`. El servicio de backup corre como root, sin puertos publicados, porque necesita ajustar permisos al restaurar.                                                                                         |
+| Puertos publicados                    | Solo Caddy, verificado con el stack de producción.                                                                                                                                                                                                                                    |
+| Cabeceras                             | CSP con nonce en la web y `default-src 'none'` en la API, HSTS, `nosniff`, `X-Frame-Options`, sin `Server` ni `X-Powered-By`. Con pruebas end-to-end.                                                                                                                                 |
+| XSS                                   | Un script inyectado en el HTML no se ejecuta (prueba end-to-end). Los únicos `dangerouslySetInnerHTML` son dos scripts constantes, con nonce.                                                                                                                                         |
+| Links cargados en el panel            | Solo `http` y `https`.                                                                                                                                                                                                                                                                |
+| Bomba de descompresión en imágenes    | **Corregido:** `sharp` rechaza más de 40 megapíxeles.                                                                                                                                                                                                                                 |
+| Datos en los logs                     | **Corregido:** Prisma con `errorFormat: 'minimal'`. Los errores de email no registran el mensaje ni al remitente. Caddy no guarda logs de acceso, así que no quedan IP.                                                                                                               |
+| Autorización                          | Una prueba recorre todas las rutas del panel: sin sesión dan 401, y las escrituras sin CSRF dan 403.                                                                                                                                                                                  |
+| Backups                               | Cifrados con clave pública. Un archivo sin cifrar no se genera: el backup falla si falta la clave.                                                                                                                                                                                    |
+
+### Riesgos residuales aceptados
+
+- **Imágenes base por versión, no por digest:** una actualización de la etiqueta puede cambiar lo que se construye. A cambio, reconstruir trae los parches.
+- **Un solo servidor:** sin alta disponibilidad. Si se cae, el sitio queda fuera de línea hasta restaurarlo.
+- **HSTS con `includeSubDomains`:** obliga a usar HTTPS en cualquier subdominio futuro. No está en la lista de precarga, así que se puede revertir.
+- **Sin SMTP o sin destino externo configurados:** el sistema funciona, pero avisa en los logs. Es responsabilidad de la puesta en marcha completarlos.
+- **Sin WAF ni protección DDoS:** el límite por IP frena abusos simples, no un ataque distribuido.

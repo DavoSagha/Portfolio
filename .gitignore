@@ -1,5 +1,6 @@
-# Documento de requisitos privado (no versionar)
+# Documentos privados (no versionar)
 docs/spec.md
+docs/defensa-tecnica.md
 
 # Dependencias y builds
 node_modules/
