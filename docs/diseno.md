@@ -116,6 +116,10 @@ Mobile first. Cada sección se renderiza solo si `sections.<nombre>` es verdader
 6. **Idiomas.** Lista simple con el nivel MCER.
 7. **Contacto.** Formulario con etiquetas visibles, errores asociados con `aria-describedby` y un honeypot oculto para lectores de pantalla (`aria-hidden`, `tabindex="-1"`). El email se muestra solo si está habilitado desde el panel.
 
+## Acceso al panel
+
+El footer tiene un link discreto "Acceso", en texto y sin destacar. Con sesión activa se reemplaza por "Panel" y "Cerrar sesión". El navbar no cambia ([D-032](decisiones.md#d-032-acceso-al-panel-desde-el-footer)).
+
 ## Panel de administración
 
 - Usa los mismos tokens, con una densidad mayor.

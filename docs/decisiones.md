@@ -293,3 +293,22 @@ Verificadas con `npm view` (2026-11) y fijadas exactas (`save-exact`), con el lo
   - Mantener la trayectoria ordenada por fecha: el campo `order` solo desempataría, y el orden pedido no tendría efecto visible.
   - Correr las pruebas contra el stack de desarrollo: modificarían el contenido real y necesitarían la contraseña real.
 - **Motivo:** el panel es una capa fina sobre la API, y la seguridad y las reglas viven en un solo lugar.
+
+## D-032. Acceso al panel desde el footer
+
+- **Decisión:**
+  - **HTML público:** el servidor renderiza siempre "Acceso", sin leer la sesión. Funciona sin JavaScript y una caché nunca puede guardar el estado de una sesión.
+  - **Marca:** `localStorage` guarda `panel-session-hint` al iniciar sesión o al entrar al panel. No es secreta ni da permisos: solo indica que vale la pena consultar `/auth/me`.
+  - **Resolución en el cliente:** sin marca no se consulta nada. Con marca, una consulta a `/auth/me` por carga de página decide qué mostrar. La cookie `HttpOnly` nunca se lee.
+  - **Sesión vencida (401):** vuelve "Acceso" y se borra la marca. Con un error de red se muestra "Acceso" y se conserva la marca, porque no se sabe si venció.
+  - **Sin saltos:** un script previo al pintado oculta "Acceso" con `visibility: hidden`, que conserva su lugar. El footer tiene un alto fijo, y en celular usa dos filas.
+  - **Cerrar sesión:** envía el token CSRF, revoca la sesión en la base y borra la marca.
+  - **Sin precarga:** los links usan `prefetch={false}`. Si no, Next pediría `/admin` en cada visita y el servidor consultaría la sesión.
+  - **Indexación:** `/admin` no está en `sitemap.xml` y mantiene `noindex`. El link lleva `rel="nofollow"`.
+  - **Métricas (Fase 4):** la exclusión de las visitas propias depende de una sesión válida en el backend, nunca de la marca. Una marca falsa no excluye a nadie, y una sesión vencida vuelve a contar.
+- **Alternativas:**
+  - Leer la sesión en el servidor: el HTML público variaría por usuario y no se podría cachear.
+  - Consultar `/auth/me` en todas las visitas: una request inútil por cada visitante.
+  - Una cookie legible como marca: viajaría al servidor en cada request, sin ningún uso allí.
+- **Efecto aceptado:** `/auth/me` renueva la inactividad, así que navegar el sitio público con sesión la mantiene viva. El límite absoluto de 7 días no cambia.
+- **Motivo:** el acceso es cómodo sin exponer nada ni penalizar a los visitantes, y la seguridad sigue dependiendo solo del backend.

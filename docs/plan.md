@@ -150,6 +150,7 @@ Documentación: plan, modelo de datos, contratos de API, dos direcciones visuale
 | Un link vacío (demo, repo, credencial) o una sección vacía no se muestran           | Supertest + Playwright    | 3    |
 | Honeypot y límite de envíos del contacto                                            | Supertest                 | 4    |
 | Eventos y descargas con sesión de admin no se registran                             | Supertest                 | 4    |
+| La marca del footer no excluye de las métricas: solo una sesión válida lo hace      | Supertest                 | 4    |
 
 ## Riesgos y mitigaciones
 
