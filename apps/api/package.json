@@ -16,6 +16,7 @@
     "cv:import": "tsx --env-file-if-exists=../../.env src/cli/cv-import.ts",
     "photo:import": "tsx --env-file-if-exists=../../.env src/cli/photo-import.ts",
     "admin:create": "tsx --env-file-if-exists=../../.env src/cli/admin-create.ts",
+    "admin:password": "tsx --env-file-if-exists=../../.env src/cli/admin-password.ts",
     "content:todos": "tsx --env-file-if-exists=../../.env src/cli/content-todos.ts"
   },
   "dependencies": {
@@ -23,6 +24,7 @@
     "@prisma/client": "7.10.1",
     "argon2": "0.45.2",
     "express": "5.3.0",
+    "express-rate-limit": "8.7.3",
     "helmet": "8.3.0",
     "pg": "8.23.1",
     "prisma": "7.10.1",

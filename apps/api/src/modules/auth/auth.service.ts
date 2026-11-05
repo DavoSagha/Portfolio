@@ -42,4 +42,8 @@ export class AuthService {
     if (input.previousToken) await this.sessions.revokeByToken(input.previousToken);
     return this.sessions.create(admin.id, input.userAgent);
   }
+
+  logout(sessionId: string) {
+    return this.sessions.revoke(sessionId);
+  }
 }

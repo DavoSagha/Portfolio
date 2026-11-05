@@ -4,7 +4,9 @@ import type { Db } from './db/client.js';
 import { errorHandler, notFoundHandler } from './http/errors.js';
 import { AuthController } from './modules/auth/auth.controller.js';
 import { AuthRepository } from './modules/auth/auth.repository.js';
-import { authRoutes } from './modules/auth/auth.routes.js';
+import { adminRoutes } from './modules/admin/admin.routes.js';
+import { privateResponse, requireCsrf, requireSession } from './modules/auth/auth.middleware.js';
+import { authRoutes, type LoginRateLimit } from './modules/auth/auth.routes.js';
 import { AuthService } from './modules/auth/auth.service.js';
 import { LoginThrottle } from './modules/auth/login-throttle.js';
 import { Sessions } from './modules/auth/sessions.js';
@@ -22,10 +24,12 @@ import type { StorageService } from './storage/storage.js';
 export interface AppDeps {
   db: Db;
   storage: StorageService;
+  /** Las pruebas lo ajustan para no chocar con el límite entre un caso y otro. */
+  loginRateLimit?: LoginRateLimit;
 }
 
 /** Arma la app con dependencias inyectadas: los tests usan una base y un storage propios. */
-export function createApp({ db, storage }: AppDeps): Express {
+export function createApp({ db, storage, loginRateLimit }: AppDeps): Express {
   const app = express();
 
   // Detrás de Caddy hay exactamente un proxy de confianza (D-015).
@@ -50,13 +54,11 @@ export function createApp({ db, storage }: AppDeps): Express {
   const files = new FilesController(new FilesRepository(db), storage);
   const publicController = new PublicController(new PublicService(new PublicRepository(db)));
   const authRepository = new AuthRepository(db);
+  const sessions = new Sessions(authRepository);
   const auth = new AuthController(
-    new AuthService(
-      authRepository,
-      new Sessions(authRepository),
-      new LoginThrottle(authRepository),
-    ),
+    new AuthService(authRepository, sessions, new LoginThrottle(authRepository)),
   );
+  const session = requireSession(sessions);
 
   const v1 = Router();
   v1.get('/health', async (_req, res) => {
@@ -64,7 +66,9 @@ export function createApp({ db, storage }: AppDeps): Express {
     res.json({ status: 'ok' });
   });
   v1.use('/public', publicRoutes(publicController));
-  v1.use('/auth', authRoutes(auth));
+  v1.use('/auth', authRoutes(auth, session, loginRateLimit));
+  // A nivel del router y no por ruta: una ruta nueva nace protegida y no se puede olvidar.
+  v1.use('/admin', privateResponse, session, requireCsrf, adminRoutes());
   app.use('/api/v1', v1);
 
   app.get('/cv', cv.primary);

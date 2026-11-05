@@ -33,6 +33,11 @@ export const notFound = (message = 'Recurso no encontrado') =>
 export const invalidCredentials = () =>
   new AppError(401, 'UNAUTHENTICATED', 'Usuario o contraseña incorrectos');
 
+/** Sin sesión válida. No aclara si falta, venció o fue revocada. */
+export const unauthenticated = () => new AppError(401, 'UNAUTHENTICATED', 'Sesión no válida');
+
+export const csrfInvalid = () => new AppError(403, 'CSRF_INVALID', 'Token CSRF inválido');
+
 export const tooManyAttempts = (retryAfterSeconds: number) =>
   new AppError(
     429,

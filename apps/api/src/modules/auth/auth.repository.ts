@@ -37,6 +37,52 @@ export class AuthRepository {
     });
   }
 
+  findSessionByTokenHash(tokenHash: string) {
+    return this.db.session.findUnique({
+      where: { tokenHash },
+      include: { user: { select: { id: true, username: true } } },
+    });
+  }
+
+  touchSession(id: string) {
+    return this.db.session.update({ where: { id }, data: { lastSeenAt: new Date() } });
+  }
+
+  revokeSession(id: string) {
+    return this.db.session.updateMany({
+      where: { id, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+  }
+
+  findOnlyAdmin() {
+    return this.db.adminUser.findFirst();
+  }
+
+  /** En una transacción: nunca queda una contraseña nueva con sesiones viejas activas. */
+  changePasswordAndRevokeSessions(userId: string, passwordHash: string) {
+    return this.db.$transaction([
+      this.db.adminUser.update({ where: { id: userId }, data: { passwordHash } }),
+      this.db.session.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      }),
+    ]);
+  }
+
+  /** Quita sesiones vencidas o revocadas y bloqueos viejos: esas tablas no crecen sin límite. */
+  async purgeExpired(olderThan: Date) {
+    await this.db.session.deleteMany({
+      where: { OR: [{ expiresAt: { lt: olderThan } }, { revokedAt: { lt: olderThan } }] },
+    });
+    await this.db.loginThrottle.deleteMany({
+      where: {
+        updatedAt: { lt: olderThan },
+        OR: [{ lockedUntil: null }, { lockedUntil: { lt: olderThan } }],
+      },
+    });
+  }
+
   findThrottle(keyHash: string) {
     return this.db.loginThrottle.findUnique({ where: { keyHash } });
   }
