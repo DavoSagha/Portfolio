@@ -275,3 +275,21 @@ Verificadas con `npm view` (2026-11) y fijadas exactas (`save-exact`), con el lo
   - Compilar `argon2` en la imagen: suma herramientas de compilación y un script de instalación sin ganar nada.
   - Guardar el límite por IP en la base: una escritura más por intento, cuando el bloqueo persistente ya está ahí.
 - **Motivo:** cada punto cierra un caso concreto de evasión o de crecimiento sin límite, con el menor código posible.
+
+## D-031. Panel de administración
+
+- **Decisión:**
+  - **Datos:** las páginas del panel son componentes de servidor que leen la API reenviando la cookie, sin caché. Los formularios son componentes de cliente que solo envían a la API y muestran sus errores.
+  - **Errores:** la API devuelve la ruta de cada campo inválido, y el formulario lo marca con `aria-invalid` y muestra su nombre visible.
+  - **Orden:** botones de subir y bajar, sin arrastrar: funcionan con teclado y en celular, sin dependencias.
+  - **Idioma:** el panel edita el español. La API ya acepta otros idiomas, y su edición se suma cuando haya contenido traducido.
+  - **Trayectoria:** el sitio la ordena por `order`, y ya no por fecha, para que el orden del panel tenga efecto. Una migración conservó el orden visible, y el botón "Ordenar por fecha" lo recalcula. Una entrada nueva va al final.
+  - **Archivos privados:** `GET /admin/files/:id` sirve las imágenes de borradores con sesión. `/files/:id` sigue sirviendo solo lo publicado.
+  - **Limpieza:** reemplazar o borrar una foto, portada, imagen, proyecto o versión de CV borra su archivo de la base y del disco.
+  - **Pruebas end-to-end:** corren en un stack aparte (`portfolio-e2e`, puerto 8081), con su propia base y un administrador de prueba, porque editan contenido.
+- **Alternativas:**
+  - Formularios con estado por campo o una librería de formularios: `FormData` alcanza y no suma dependencias.
+  - Arrastrar y soltar: suma una dependencia y requiere una alternativa accesible de todos modos.
+  - Mantener la trayectoria ordenada por fecha: el campo `order` solo desempataría, y el orden pedido no tendría efecto visible.
+  - Correr las pruebas contra el stack de desarrollo: modificarían el contenido real y necesitarían la contraseña real.
+- **Motivo:** el panel es una capa fina sobre la API, y la seguridad y las reglas viven en un solo lugar.

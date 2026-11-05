@@ -1,6 +1,6 @@
 # Seguridad
 
-> Estado: las medidas de las Fases 1 y 2 están implementadas y cubiertas por pruebas. Las demás están **previstas**. La Fase 5 incluye una revisión completa.
+> Estado: las medidas de las Fases 1 a 3 están implementadas y cubiertas por pruebas. Las demás están **previstas**. La Fase 5 incluye una revisión completa.
 
 ## Activos
 
@@ -28,6 +28,7 @@
 | Falsificación de IP para evadir límites     | `trust proxy = 1`, la API sin puertos publicados y Caddy que descarta el `X-Forwarded-For` entrante. Lo cubre un test.                                                                                                                                           | 2    |
 | Inyección (SQL, payloads malformados)       | Prisma con consultas parametrizadas y Zod en body, query y params. Se rechaza lo que no valida, sin intentar corregirlo.                                                                                                                                         | 1–3  |
 | XSS                                         | React escapa por defecto y no se usa `dangerouslySetInnerHTML` con contenido editable. Hay CSP vía `helmet`, y los textos largos se renderizan como texto plano con saltos de línea, no como HTML.                                                               | 1    |
+| Links peligrosos cargados en el panel       | Los links de proyectos, trayectoria y perfil solo aceptan `http` y `https`: `javascript:` en un `href` sería un XSS guardado.                                                                                                                                    | 3    |
 | Subida de archivos maliciosos               | Lista blanca: PDF para el CV y JPG, PNG o WebP para imágenes. El tipo se detecta por magic bytes, con un límite de 5 MB. Los nombres los genera el sistema, las imágenes se reprocesan con `sharp` (se descarta EXIF) y nada se sirve desde una ruta ejecutable. | 3    |
 | Path traversal en archivos                  | Se accede a los archivos por id de la base. La `storageKey` la genera el sistema y nunca se arma una ruta con datos del cliente.                                                                                                                                 | 1    |
 | Exposición de borradores                    | Las rutas públicas filtran por `published` o `status`. La previsualización requiere sesión y envía `noindex`. `/files/:id` sirve solo archivos referenciados por contenido publicado.                                                                            | 1–3  |

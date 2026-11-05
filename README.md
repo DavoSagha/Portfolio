@@ -35,7 +35,7 @@ No hace falta un `.env` para probarlo en local: `compose.yaml` trae valores de d
 
 ### Cargar un CV
 
-Mientras no exista el panel (Fase 3), los PDF se cargan por consola:
+Se cargan desde el panel (`/admin/cv`) o por consola:
 
 ```sh
 docker compose cp ./mi-cv.pdf api:/tmp/cv.pdf
@@ -54,6 +54,10 @@ docker compose exec api node dist/cli/photo-import.js --file /tmp/foto.jpg
 ```
 
 La imagen se valida (JPG, PNG o WebP, hasta 5 MB) y se guarda como WebP, sin metadatos (EXIF, GPS).
+
+### Panel
+
+`/admin`, con el usuario creado por `admin-create`. Permite editar perfil, proyectos, trayectoria, skills, idiomas y CV. Los cambios se ven en el sitio en un minuto como máximo, sin redesplegar.
 
 ### Administrador
 
@@ -95,11 +99,13 @@ npm run lint           # ESLint (incluye reglas de accesibilidad para la web)
 npm run format:check   # Prettier
 npm run typecheck      # TypeScript estricto en ambas apps
 npm test               # Vitest + Supertest contra PostgreSQL real (base *_test)
-npm run test:e2e       # Playwright contra el stack levantado con docker compose
+npm run test:e2e:up    # levanta un stack aislado para Playwright (puerto 8081)
+npm run test:e2e       # Playwright contra ese stack: edita contenido, no toca el de desarrollo
+npm run test:e2e:down  # lo baja y borra sus datos
 npm run build
 ```
 
-Para los tests hace falta `npm run db:up`, y para los end-to-end, el stack completo (`docker compose up --build`) más `npx playwright install chromium` la primera vez. Por seguridad, solo corren contra una base cuyo nombre termina en `_test`.
+Para los tests hace falta `npm run db:up`, y para los end-to-end, `npm run test:e2e:up` más `npx playwright install chromium` la primera vez. Por seguridad, solo corren contra una base cuyo nombre termina en `_test`.
 
 El CI (GitHub Actions) ejecuta todo lo anterior y además:
 

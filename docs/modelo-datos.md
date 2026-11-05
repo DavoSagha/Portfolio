@@ -161,7 +161,7 @@ Una skill con `published = false` no aparece en el sitio. Una categoría se mues
 
 **ProjectTranslation:** `title`, `summary` (problema en una línea, para la tarjeta), `role`, `context`, `problem`, `solution`, `architecture`, `decisions`, `challenges`, `learnings`, `limitations?` y `disclaimer?`. Si `disclaimer` tiene texto, se muestra destacado en la tarjeta y en el detalle; es el caso de un proyecto sin afiliación con la marca que usa. Un texto vacío no se muestra: ni el aporte (`role`) ni las secciones del detalle ([D-029](decisiones.md#d-029-stack-estado-y-secciones-vacías-de-los-proyectos)).
 
-**Fase 3:** se suma `demoNote?` a `ProjectTranslation`, un aviso opcional junto al link de la demo (por ejemplo, que puede tardar en cargar por estar en un hosting gratuito).
+`demoNote?` es un aviso opcional junto al link de la demo (por ejemplo, que puede tardar en cargar por estar en un hosting gratuito). Se muestra solo si hay demo.
 
 **ProjectImage:** `id`, `projectId` (Cascade), `fileId`, `order`. **ProjectImageTranslation:** `alt`.
 

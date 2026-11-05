@@ -24,7 +24,7 @@ El perfil, las skills, los proyectos, la trayectoria y los CV están completos y
 
 ### Proyectos
 
-Destacados en el inicio, en este orden: appFut, Carta digital para La Catedral del Pisco y Formación mainframe. Ningún proyecto tiene demo por ahora; se cargan desde el panel (Fase 3).
+Destacados en el inicio, en este orden: appFut, Carta digital para La Catedral del Pisco y Formación mainframe. Ningún proyecto tiene demo por ahora; se cargan desde el panel.
 
 - [ ] Aporte propio en la carta digital: no se muestra hasta confirmarlo.
 - [ ] Secciones del detalle de appFut y de la carta digital: borradores pendientes de aprobación.
@@ -44,7 +44,7 @@ Destacados en el inicio, en este orden: appFut, Carta digital para La Catedral d
 - [x] Fijar las versiones exactas de las dependencias con `npm view` ([D-023](decisiones.md#d-023-versiones-fijadas-en-la-fase-1)).
 - [x] Documentar la instalación desde cero en el README.
 - [ ] Registro de eventos (`CV_DOWNLOAD`, visitas) y exclusión de las visitas del admin (Fase 4).
-- [ ] Al reemplazar la foto, borrar el archivo anterior si ya no se usa (Fase 3, con el panel).
+- [x] Al reemplazar la foto, la portada o una imagen, borrar el archivo anterior.
 - [ ] CSP de la web con nonce y revisión de cabeceras (Fase 5). La API ya tiene la CSP más estricta.
 - [ ] 8 vulnerabilidades moderadas en herramientas de desarrollo (`minimatch`, vía plugins de ESLint). No afectan a producción (`npm audit --omit=dev` da 0). Revisar cuando los plugins publiquen versiones compatibles, sin forzar.
 - [ ] Completar el respaldo y la recuperación de secretos en [seguridad](seguridad.md) (Fase 5).

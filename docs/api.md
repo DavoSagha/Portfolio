@@ -98,7 +98,8 @@ Devuelve `ProjectCard[]` ordenados por `order`:
   "demoUrl": null,
   "repoUrl": null,
   "coverUrl": null,
-  "disclaimer": null
+  "disclaimer": null,
+  "demoNote": null
 }
 ```
 
@@ -221,10 +222,18 @@ Todas las rutas `/api/v1/admin/*`:
 
 Los recursos de admin devuelven todas las traducciones: `translations: { es: {…}, en: {…} }`.
 
+Reglas de escritura:
+
+- Cada idioma de `translations` es un objeto completo: un texto opcional que falta queda vacío.
+- Un texto o un link vacío se guarda como `null` y no se muestra.
+- Los links solo aceptan `http` y `https`. Otro esquema, como `javascript:`, responde 400.
+- Las claves no declaradas se descartan: no se pueden escribir campos internos como `order` o `createdAt`.
+
 ### Perfil
 
 - `GET /admin/profile` · `PUT /admin/profile`: reemplaza los campos y las traducciones.
-- `POST /admin/profile/photo`: multipart con el campo `file`. Imagen JPG, PNG o WebP de hasta 5 MB. Responde `200 { "photoUrl" }`.
+- `POST /admin/profile/photo`: multipart con el campo `file`. Imagen JPG, PNG o WebP de hasta 5 MB. Responde `200 { "photoUrl" }` y borra la foto anterior.
+- `DELETE /admin/profile/photo`: quita la foto.
 
 ### Recursos con CRUD estándar
 
@@ -242,13 +251,18 @@ Los recursos de admin devuelven todas las traducciones: `translations: { es: {�
 Particularidades:
 
 - `skills`: `{ "categoryId", "name", "level", "published", "projectIds": [] }`.
-- `projects`: el `slug` es único (409 si se repite). `skillIds` reemplaza los vínculos.
+- `skills`: una skill sin nivel no se puede publicar (400).
+- `projects`: el `slug` es único (409 si se repite). `skillIds` reemplaza los vínculos. Un proyecto nuevo es un borrador, salvo que se indique otro `status`. `demoNote` se devuelve al sitio público solo si hay `demoUrl`.
+- `timeline`: el sitio la muestra por `order`. `relatedProjectId` inexistente responde 409.
 
 ### Imágenes de proyecto
 
 - `POST /admin/projects/:id/images`: multipart con `file`, `alt` y `locale`. Mismas reglas que la foto. Responde `201`.
 - `DELETE /admin/projects/:id/images/:imageId` · `PUT /admin/projects/:id/images/reorder`
-- `POST /admin/projects/:id/cover`: multipart `file`.
+- `POST /admin/projects/:id/cover`: multipart `file`. Borra la portada anterior.
+- `DELETE /admin/projects/:id/cover`: quita la portada.
+- `GET /admin/files/:id`: cualquier archivo, también de borradores. Es la URL que usan el panel y la previsualización.
+- Al borrar una imagen o un proyecto también se borran sus archivos, de la base y del disco.
 
 ### Previsualización
 
@@ -259,7 +273,7 @@ Requiere sesión. No registra métricas y responde con `X-Robots-Tag: noindex`.
 
 ### CV
 
-- `GET /admin/cv`: `[{ "profile", "currentVersionId", "versions": [{ "id", "label", "uploadedAt", "size" }] }]` más `primaryProfile`.
+- `GET /admin/cv`: `{ "primaryProfile", "profiles": [{ "profile", "currentVersionId", "versions": [{ "id", "label", "uploadedAt", "size" }] }] }`.
 - `POST /admin/cv`: multipart con `profile`, `label`, `file` y `makeCurrent` (booleano, por defecto `true`). Acepta solo PDF de hasta 5 MB y responde `201`.
 - `PUT /admin/cv/profiles/:profile/current { "versionId" }`: 409 si la versión es de otro perfil.
 - `PUT /admin/cv/primary { "profile": "backend" }`: define qué perfil sirve `/cv`. 409 si ese perfil no tiene versión vigente.
