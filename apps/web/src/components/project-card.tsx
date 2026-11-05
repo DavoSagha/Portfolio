@@ -40,25 +40,32 @@ export function ProjectStack({ stack, className }: { stack: string[]; className?
   );
 }
 
-export function ProjectLinks({ demoUrl, repoUrl }: Pick<ProjectCardData, 'demoUrl' | 'repoUrl'>) {
+export function ProjectLinks({
+  demoUrl,
+  repoUrl,
+  demoNote,
+}: Pick<ProjectCardData, 'demoUrl' | 'repoUrl' | 'demoNote'>) {
   if (!demoUrl && !repoUrl) return null;
   return (
-    <ul className="flex flex-wrap gap-4 text-sm">
-      {demoUrl && (
-        <li>
-          <a href={demoUrl} rel="noopener" target="_blank">
-            Ver demo<span className="sr-only"> (abre en otra pestaña)</span>
-          </a>
-        </li>
-      )}
-      {repoUrl && (
-        <li>
-          <a href={repoUrl} rel="noopener" target="_blank">
-            Ver código<span className="sr-only"> (abre en otra pestaña)</span>
-          </a>
-        </li>
-      )}
-    </ul>
+    <div className="text-sm">
+      <ul className="flex flex-wrap gap-4">
+        {demoUrl && (
+          <li>
+            <a href={demoUrl} rel="noopener" target="_blank">
+              Ver demo<span className="sr-only"> (abre en otra pestaña)</span>
+            </a>
+          </li>
+        )}
+        {repoUrl && (
+          <li>
+            <a href={repoUrl} rel="noopener" target="_blank">
+              Ver código<span className="sr-only"> (abre en otra pestaña)</span>
+            </a>
+          </li>
+        )}
+      </ul>
+      {demoUrl && demoNote && <p className="mt-1 text-muted">{demoNote}</p>}
+    </div>
   );
 }
 
@@ -93,7 +100,11 @@ export function ProjectCard({
         <Link href={`/proyectos/${project.slug}`} className="text-sm">
           Ver detalle<span className="sr-only"> de {project.title}</span>
         </Link>
-        <ProjectLinks demoUrl={project.demoUrl} repoUrl={project.repoUrl} />
+        <ProjectLinks
+          demoUrl={project.demoUrl}
+          repoUrl={project.repoUrl}
+          demoNote={project.demoNote}
+        />
       </div>
     </article>
   );

@@ -71,7 +71,7 @@ export function Hero({ home }: { home: Home }) {
           )}
         </div>
 
-        {profile.photoUrl ? (
+        {profile.photoUrl && (
           <Image
             src={profile.photoUrl}
             alt={`Foto de ${profile.fullName}`}
@@ -82,10 +82,6 @@ export function Hero({ home }: { home: Home }) {
             unoptimized
             className="size-40 rounded-md border border-border object-cover sm:size-56"
           />
-        ) : (
-          <div className="hidden md:block">
-            <Text value="TODO: foto" />
-          </div>
         )}
       </Container>
     </section>

@@ -34,12 +34,10 @@ export function Timeline({ entries }: { entries: TimelineEntry[] }) {
               </p>
             )}
             <div className="mt-2 flex flex-wrap gap-4 text-sm">
-              {e.credentialUrl ? (
+              {e.credentialUrl && (
                 <a href={e.credentialUrl} rel="noopener" target="_blank">
                   Ver credencial<span className="sr-only"> (abre en otra pestaña)</span>
                 </a>
-              ) : (
-                e.type === 'CERTIFICATION' && <Text value="TODO: link de la credencial" />
               )}
               {e.relatedProjectSlug && (
                 <Link href={`/proyectos/${e.relatedProjectSlug}`}>Ver proyecto relacionado</Link>

@@ -35,6 +35,8 @@ export interface ProjectCard {
   repoUrl: string | null;
   coverUrl: string | null;
   disclaimer: string | null;
+  /** Aviso junto al link de la demo. */
+  demoNote: string | null;
 }
 
 export interface ProjectDetail extends ProjectCard {
