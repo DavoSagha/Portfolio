@@ -35,7 +35,10 @@ test.describe('acceso al panel', () => {
     // La sesión no queda al alcance de un script de la página.
     expect(await page.evaluate('document.cookie')).not.toContain('sid=');
 
-    await page.getByRole('button', { name: 'Cerrar sesión' }).click();
+    await page
+      .getByRole('navigation', { name: 'Panel' })
+      .getByRole('button', { name: 'Cerrar sesión' })
+      .click();
     await expect(page).toHaveURL(/\/admin\/login$/);
     await page.goto('/admin');
     await expect(page).toHaveURL(/\/admin\/login$/);
