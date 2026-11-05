@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { SKILL_LEVEL_LABEL } from '@/lib/format';
 import type { SkillGroup } from '@/lib/types';
 
@@ -26,7 +25,10 @@ export function Skills({ groups }: { groups: SkillGroup[] }) {
                     {skill.projects.map((p, i) => (
                       <span key={p.slug}>
                         {i > 0 && ', '}
-                        <Link href={`/proyectos/${p.slug}`}>{p.title}</Link>
+                        {/* Un <a> y no un Link: son muchos, y así no cargan ni precargan nada. */}
+                        <a href={`/proyectos/${p.slug}`} className="underline">
+                          {p.title}
+                        </a>
                       </span>
                     ))}
                   </p>
