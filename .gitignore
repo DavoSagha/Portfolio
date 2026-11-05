@@ -1,0 +1,32 @@
+# Documento de requisitos privado (no versionar)
+docs/spec.md
+
+# Dependencias y builds
+node_modules/
+dist/
+build/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# Variables de entorno (solo se versiona el ejemplo)
+.env
+.env.*
+!.env.example
+
+# Archivos subidos y backups locales
+uploads/
+backups/
+
+# Pruebas end-to-end
+playwright-report/
+test-results/
+
+# Sistema y editores
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.log
