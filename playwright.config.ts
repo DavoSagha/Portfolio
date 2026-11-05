@@ -1,17 +1,20 @@
 import { defineConfig, devices } from '@playwright/test';
+import { baseURL } from './e2e/support';
 
 /**
- * Pruebas end-to-end contra el stack completo (Caddy + web + API + base).
- * Local: `docker compose up --build` y después `npm run test:e2e`.
+ * Pruebas end-to-end contra un stack completo y aislado (Caddy + web + API + base), que no
+ * comparte datos con el de desarrollo: estas pruebas editan contenido.
+ * Local: `npm run test:e2e:up` y después `npm run test:e2e`.
  */
 export default defineConfig({
   testDir: 'e2e',
+  globalSetup: './e2e/global-setup.ts',
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['github'], ['list']] : 'list',
   use: {
-    baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:8080',
+    baseURL,
     trace: 'retain-on-failure',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],

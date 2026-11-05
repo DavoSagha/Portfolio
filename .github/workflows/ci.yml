@@ -63,15 +63,15 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      # Stack completo con el contenido del seed (APP_ENV=development por defecto).
-      - run: docker compose up -d --build --wait
+      # Stack aislado con el contenido del seed (APP_ENV=development por defecto).
+      - run: npm run test:e2e:up
       - name: Esperar a que el sitio responda a través de Caddy
         run: |
           for i in $(seq 1 30); do
-            curl -fsS http://localhost:8080/proyectos >/dev/null && exit 0
+            curl -fsS http://localhost:8081/proyectos >/dev/null && exit 0
             sleep 2
           done
-          docker compose logs
+          docker compose -p portfolio-e2e logs
           exit 1
       - run: npm run test:e2e
       - if: failure()
