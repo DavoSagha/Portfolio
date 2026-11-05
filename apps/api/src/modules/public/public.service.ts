@@ -54,7 +54,8 @@ export class PublicService {
         timeline: counts.timeline > 0,
         skills: counts.skills > 0,
         languages: counts.languages > 0,
-        contact: Boolean(publicEmail || profile.linkedinUrl || profile.githubUrl),
+        // El formulario siempre está disponible.
+        contact: true,
       },
     };
   }

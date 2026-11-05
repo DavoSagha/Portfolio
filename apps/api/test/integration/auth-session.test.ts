@@ -152,7 +152,9 @@ describe('rutas de administración', () => {
 
 describe('límite general por IP en el login', () => {
   it('corta los intentos con usuarios distintos, que el bloqueo por usuario e IP no frena', async () => {
-    const limited = await createTestApp(db, { loginRateLimit: { limit: 3, windowMs: 60_000 } });
+    const limited = await createTestApp(db, {
+      rateLimits: { login: { limit: 3, windowMs: 60_000 } },
+    });
     const attempt = (username: string) =>
       request(limited.app).post('/api/v1/auth/login').send({ username, password: 'clave-mala' });
     for (const username of ['uno', 'dos', 'tres']) {

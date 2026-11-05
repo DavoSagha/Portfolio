@@ -29,6 +29,13 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-portfolio}:${POSTGRES_PASSWORD:-portfolio}@db:5432/${POSTGRES_DB:-portfolio}
       SITE_URL: ${SITE_URL:-http://localhost:8080}
       UPLOADS_DIR: /data/uploads
+      # Opcional: sin SMTP, los mensajes de contacto se guardan pero no se envían por email.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      CONTACT_TO: ${CONTACT_TO:-}
     volumes:
       - uploads:/data/uploads
     depends_on:

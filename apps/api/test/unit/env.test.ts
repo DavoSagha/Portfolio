@@ -31,6 +31,19 @@ describe('loadEnv', () => {
     expect(message).not.toContain('portfolio:portfolio');
   });
 
+  it('el SMTP es todo o nada, y vacío cuenta como sin configurar', () => {
+    expect(loadEnv({ ...base, SMTP_HOST: '', SMTP_PASS: '' }).SMTP_HOST).toBeUndefined();
+    expect(() => loadEnv({ ...base, SMTP_HOST: 'smtp.ejemplo.com' })).toThrow(/SMTP_USER/);
+    const env = loadEnv({
+      ...base,
+      SMTP_HOST: 'smtp.ejemplo.com',
+      SMTP_USER: 'cuenta',
+      SMTP_PASS: 'secreta',
+      CONTACT_TO: 'yo@ejemplo.com',
+    });
+    expect(env.SMTP_PORT).toBe(587);
+  });
+
   it('acepta una configuración de producción válida', () => {
     const env = loadEnv({
       APP_ENV: 'production',

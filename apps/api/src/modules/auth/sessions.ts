@@ -28,16 +28,28 @@ export class Sessions {
     return { token, csrfToken };
   }
 
-  /** Devuelve la sesión si sigue vigente. Cualquier motivo de rechazo da el mismo resultado. */
-  async authenticate(token: string) {
+  private async findValid(token: string) {
     const session = await this.repo.findSessionByTokenHash(hashToken(token));
     if (!session || session.revokedAt) return null;
     const now = Date.now();
     if (session.expiresAt.getTime() <= now) return null;
-    const idle = now - session.lastSeenAt.getTime();
-    if (idle >= INACTIVITY_LIMIT_MS) return null;
-    if (idle >= TOUCH_INTERVAL_MS) await this.repo.touchSession(session.id);
+    if (now - session.lastSeenAt.getTime() >= INACTIVITY_LIMIT_MS) return null;
+    return session;
+  }
+
+  /** Devuelve la sesión si sigue vigente. Cualquier motivo de rechazo da el mismo resultado. */
+  async authenticate(token: string) {
+    const session = await this.findValid(token);
+    if (!session) return null;
+    if (Date.now() - session.lastSeenAt.getTime() >= TOUCH_INTERVAL_MS) {
+      await this.repo.touchSession(session.id);
+    }
     return { id: session.id, user: session.user, csrfToken: session.csrfToken };
+  }
+
+  /** Solo consulta: no cuenta como actividad, así que no prolonga la sesión. */
+  async isValid(token: string) {
+    return (await this.findValid(token)) !== null;
   }
 
   revoke(id: string) {

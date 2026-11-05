@@ -2,6 +2,7 @@ import { createApp } from './app.js';
 import { loadEnv } from './config/env.js';
 import { createDb } from './db/client.js';
 import { AuthRepository } from './modules/auth/auth.repository.js';
+import { DisabledMailer, SmtpMailer } from './modules/contact/mailer.js';
 import { LocalDiskStorage } from './storage/local-disk-storage.js';
 
 const PURGE_AFTER_MS = 24 * 60 * 60 * 1000;
@@ -9,7 +10,28 @@ const PURGE_EVERY_MS = 60 * 60 * 1000;
 
 const env = loadEnv();
 const db = createDb(env.DATABASE_URL);
-const app = createApp({ db, storage: new LocalDiskStorage(env.UPLOADS_DIR) });
+
+function createMailer() {
+  if (!env.SMTP_HOST || !env.SMTP_USER || !env.SMTP_PASS || !env.CONTACT_TO) {
+    console.warn('SMTP sin configurar: los mensajes de contacto se guardan pero no se envían.');
+    return new DisabledMailer();
+  }
+  return new SmtpMailer({
+    host: env.SMTP_HOST,
+    port: env.SMTP_PORT,
+    user: env.SMTP_USER,
+    pass: env.SMTP_PASS,
+    from: env.SMTP_FROM ?? env.SMTP_USER,
+    to: env.CONTACT_TO,
+    requireTls: env.APP_ENV === 'production',
+  });
+}
+
+const app = createApp({
+  db,
+  storage: new LocalDiskStorage(env.UPLOADS_DIR),
+  mailer: createMailer(),
+});
 
 const authRepository = new AuthRepository(db);
 const purge = () =>

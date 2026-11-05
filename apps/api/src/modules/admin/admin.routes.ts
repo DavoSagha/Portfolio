@@ -2,6 +2,7 @@ import { Router, type Request, type RequestHandler, type Response } from 'expres
 import multer from 'multer';
 import type { z } from 'zod';
 import type { FilesController } from '../files/files.controller.js';
+import type { InsightsController } from '../metrics/insights.controller.js';
 import type { AdminController } from './admin.controller.js';
 import {
   idParams,
@@ -73,6 +74,7 @@ export function adminRoutes(
   controller: AdminController,
   service: AdminService,
   files: FilesController,
+  insights: InsightsController,
 ): Router {
   const router = Router();
 
@@ -122,6 +124,13 @@ export function adminRoutes(
   router.put('/cv/profiles/:profile/current', controller.setCurrentCv);
   router.get('/cv/versions/:id/file', controller.previewCvVersion);
   router.delete('/cv/versions/:id', controller.deleteCvVersion);
+
+  router.get('/messages', insights.listMessages);
+  router.patch('/messages/:id', insights.updateMessage);
+  router.delete('/messages/:id', insights.deleteMessage);
+
+  router.get('/metrics/summary', insights.summary);
+  router.get('/metrics/timeseries', insights.timeseries);
 
   return router;
 }

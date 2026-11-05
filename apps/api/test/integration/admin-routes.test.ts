@@ -5,6 +5,7 @@ import type { FilesController } from '../../src/modules/files/files.controller.j
 import type { AdminController } from '../../src/modules/admin/admin.controller.js';
 import { adminRoutes } from '../../src/modules/admin/admin.routes.js';
 import type { AdminService } from '../../src/modules/admin/admin.service.js';
+import type { InsightsController } from '../../src/modules/metrics/insights.controller.js';
 import { adminClient } from '../helpers/admin.js';
 import { createTestApp } from '../helpers/app.js';
 import { createTestDb, resetDb } from '../helpers/db.js';
@@ -44,6 +45,7 @@ const routes = registeredRoutes(
     stub as unknown as AdminController,
     stub as unknown as AdminService,
     stub as unknown as FilesController,
+    stub as unknown as InsightsController,
   ),
 );
 const writes = routes.filter((route) => route.method !== 'get');
