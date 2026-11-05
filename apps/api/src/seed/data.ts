@@ -63,6 +63,8 @@ export const skillCategories: { name: string; skills: string[] }[] = [
 
 interface SeedProject {
   slug: string;
+  /** Destacado en el inicio. */
+  featured: boolean;
   team: ProjectTeam | null;
   origin: ProjectOrigin | null;
   startDate: string | null;
@@ -93,10 +95,14 @@ const pendingDetail = {
   learnings: todo('aprendizajes'),
 };
 
-/** En el orden en que se muestran. demoUrl y repoUrl quedan en null hasta tenerlos. */
+/**
+ * En el orden en que se muestran. demoUrl y repoUrl quedan en null hasta tenerlos.
+ * Roles y descripciones: redacción de los CV, verificada contra el contenido acordado.
+ */
 export const projects: SeedProject[] = [
   {
     slug: 'appfut',
+    featured: true,
     team: 'GROUP',
     origin: null,
     startDate: null,
@@ -107,7 +113,7 @@ export const projects: SeedProject[] = [
       title: 'appFut',
       summary:
         'PWA mobile first para organizar partidos de fútbol, con gestión de jugadores, pagos y suplentes.',
-      role: 'Desarrollada con un amigo. Mi aporte: la interfaz, la creación de partidos con código y link de invitación, el acceso solo con el nombre para sumarse, darse de baja o cambiar de equipo desde cualquier dispositivo, y el inicio de sesión con Google.',
+      role: 'Implementé el inicio de sesión con Google, la parte más compleja del proyecto. Desarrollé la interfaz y la creación de partidos con código y link de invitación, para sumarse, darse de baja o cambiar de equipo desde cualquier dispositivo con solo ingresar el nombre.',
       context: todo('contexto y stack'),
       decisions:
         'Acceso solo con el nombre: una decisión para reducir la fricción al sumarse a un partido.',
@@ -117,6 +123,7 @@ export const projects: SeedProject[] = [
   },
   {
     slug: 'menu-digital',
+    featured: false,
     team: null,
     origin: 'PERSONAL',
     startDate: null,
@@ -126,7 +133,7 @@ export const projects: SeedProject[] = [
       ...pendingDetail,
       title: 'Menú digital',
       summary: 'PWA de menú digital con soporte multilenguaje y asistente de chat con IA.',
-      role: 'Lo desarrollé y se lo ofrecí a la cadena por iniciativa propia.',
+      role: 'Desarrollé el producto y lo ofrecí a la cadena por iniciativa propia (no fue contratado).',
       context: todo('contexto y stack'),
       disclaimer:
         'Proyecto personal sin afiliación con ninguna marca. No fue contratado ni implementado por ninguna empresa.',
@@ -134,6 +141,7 @@ export const projects: SeedProject[] = [
   },
   {
     slug: 'sweet-medical',
+    featured: true,
     team: null,
     origin: 'ACADEMIC',
     startDate: '2026-03-01',
@@ -143,12 +151,13 @@ export const projects: SeedProject[] = [
       ...pendingDetail,
       title: 'Sweet Medical',
       summary: 'Plataforma de gestión de turnos médicos.',
-      role: 'Controladores y servicios en Express, arquitectura por capas, validaciones con Zod y endpoints REST.',
+      role: 'Desarrollé controladores y servicios en Express con arquitectura por capas, validación de esquemas con Zod y endpoints REST con consultas a la base de datos.',
       context: 'Proyecto académico de UTN FRBA, de marzo a julio de 2026.',
     },
   },
   {
     slug: 'simulador-sistema-operativo',
+    featured: false,
     team: null,
     origin: 'ACADEMIC',
     startDate: '2025-03-01',
@@ -158,12 +167,13 @@ export const projects: SeedProject[] = [
       ...pendingDetail,
       title: 'Simulador de sistema operativo',
       summary: 'Simulador de un sistema operativo desarrollado en Go.',
-      role: 'Módulo de CPU que interpreta y ejecuta instrucciones assembler, incluida la deserialización de las instrucciones enviadas por el scheduler.',
+      role: 'Desarrollé el módulo de CPU que interpreta y ejecuta instrucciones assembler, y resolví la deserialización de las instrucciones enviadas por el scheduler.',
       context: 'Proyecto académico de UTN, de marzo a julio de 2025.',
     },
   },
   {
     slug: 'formacion-mainframe',
+    featured: true,
     team: null,
     origin: 'ACADEMIC',
     startDate: '2025-05-01',
@@ -174,7 +184,7 @@ export const projects: SeedProject[] = [
       title: 'Formación mainframe',
       summary:
         'Rutinas COBOL Batch y CICS, reportes por consola y spool, JCL con SORT/IDCAMS y control de MAXCC, y archivos QSAM/VSAM.',
-      role: todo('rol'),
+      role: 'Diseñé rutinas en COBOL (Batch y CICS) con reportes por consola y spool. Ejecuté JCL con los utilitarios SORT e IDCAMS y control de MAXCC, gestionando archivos QSAM y VSAM.',
       context: 'Formación de Codeki y UBA, de mayo a noviembre de 2025.',
     },
   },
@@ -187,6 +197,7 @@ interface SeedTimelineEntry {
   endDate: string | null;
   datePrecision: DatePrecision;
   relatedProjectSlug?: string;
+  credentialUrl?: string;
   es: { title: string; description: string | null };
 }
 
@@ -200,7 +211,7 @@ export const timeline: SeedTimelineEntry[] = [
     es: {
       title: 'Becario de investigación',
       description:
-        'Recolección, depuración y estructuración de datasets académicos; documentación técnica y apoyo en dinámicas ágiles.',
+        'Recolección, depuración y estructuración de datasets académicos para su análisis cuantitativo.\nSistematización de documentación técnica y apoyo en la adopción de dinámicas ágiles.',
     },
   },
   {
@@ -212,7 +223,7 @@ export const timeline: SeedTimelineEntry[] = [
     es: {
       title: 'Community manager y gestión de datos',
       description:
-        'Scripts en Python para recopilar unos 10.000 comentarios y sortear entre los participantes de un concurso, sin pagar una herramienta externa; integración de catálogos entre Meta Business y plataformas de eCommerce; contenido para redes.',
+        'Desarrollé scripts en Python para recopilar unos 10.000 comentarios y sortear entre los participantes de un concurso, sin pagar una herramienta externa.\nIntegración y sincronización de catálogos de productos entre Meta Business y plataformas de eCommerce.\nAnálisis, edición y creación de contenido para redes con Canva, CapCut y Nano Banana Pro.',
     },
   },
   {
@@ -223,7 +234,8 @@ export const timeline: SeedTimelineEntry[] = [
     datePrecision: 'MONTH',
     es: {
       title: 'Data entry',
-      description: 'Digitalización, control de consistencia y carga de registros en Excel.',
+      description:
+        'Digitalización, control de consistencia e ingreso de registros operativos en planillas de Excel.',
     },
   },
   {
@@ -241,11 +253,15 @@ export const timeline: SeedTimelineEntry[] = [
     endDate: null,
     datePrecision: 'YEAR',
     relatedProjectSlug: 'formacion-mainframe',
+    credentialUrl:
+      'https://drive.google.com/file/d/1fk_aOGq2wCDEs-UndfYrxwjNYR7OWHsO/view?usp=sharing',
     es: { title: 'Desarrollador COBOL (Batch y CICS)', description: null },
   },
   {
     type: 'CERTIFICATION',
     organization: 'Argentina Programa 4.0',
+    credentialUrl:
+      'https://drive.google.com/file/d/13-pi0aX3MFWJyRDlJfcQO8mluaVd_qJ_/view?usp=sharing',
     startDate: '2023-01-01',
     endDate: null,
     datePrecision: 'YEAR',

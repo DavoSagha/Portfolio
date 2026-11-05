@@ -49,11 +49,11 @@ describe('API pública con el contenido del seed', () => {
     expect(res.body.cv).toEqual({ primaryUrl: null, profiles: [] });
     expect(res.body.featuredProjects.map((p: { slug: string }) => p.slug)).toEqual([
       'appfut',
-      'menu-digital',
       'sweet-medical',
-      'simulador-sistema-operativo',
       'formacion-mainframe',
     ]);
+    const all = await request(ctx.app).get('/api/v1/public/projects');
+    expect(all.body).toHaveLength(5);
     expect(res.body.sections).toEqual({
       projects: true,
       timeline: true,
@@ -125,7 +125,10 @@ describe('API pública con el contenido del seed', () => {
     expect(cobol).toMatchObject({
       type: 'CERTIFICATION',
       relatedProjectSlug: 'formacion-mainframe',
+      credentialUrl: expect.stringMatching(/^https:\/\/drive\.google\.com\/file\/d\/1fk_/),
     });
+    const fullStack = res.body.find((e: { title: string }) => e.title.includes('Full Stack'));
+    expect(fullStack.credentialUrl).toMatch(/^https:\/\/drive\.google\.com\/file\/d\/13-pi/);
   });
 
   it('usa la traducción pedida y, si no existe, la de español', async () => {

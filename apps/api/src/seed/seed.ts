@@ -58,7 +58,7 @@ export async function runSeed(db: Db): Promise<SeedResult> {
         data: {
           slug: p.slug,
           status: 'PUBLISHED',
-          featured: true,
+          featured: p.featured,
           team: p.team,
           origin: p.origin,
           startDate: date(p.startDate),
@@ -85,6 +85,7 @@ export async function runSeed(db: Db): Promise<SeedResult> {
           startDate: date(entry.startDate)!,
           endDate: date(entry.endDate),
           datePrecision: entry.datePrecision,
+          credentialUrl: entry.credentialUrl ?? null,
           relatedProjectId: entry.relatedProjectSlug
             ? (projectIds.get(entry.relatedProjectSlug) ?? null)
             : null,
