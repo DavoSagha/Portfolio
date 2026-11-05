@@ -1,0 +1,78 @@
+# Producción: se suma a compose.yaml.
+#   docker compose -f compose.yaml -f compose.prod.yaml up -d --build
+# Los `:?` hacen que compose se niegue a arrancar si falta una variable del .env.
+
+x-logging: &logging # Sin rotación, los logs terminan llenando el disco.
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '5'
+
+services:
+  db:
+    logging: *logging
+    security_opt: ['no-new-privileges:true']
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?Falta en el .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Falta en el .env}
+      POSTGRES_DB: ${POSTGRES_DB:?Falta en el .env}
+
+  api:
+    logging: *logging
+    security_opt: ['no-new-privileges:true']
+    environment:
+      # Con production, la API no arranca con contraseñas de ejemplo ni SITE_URL sin https,
+      # el seed no corre solo y el SMTP exige TLS.
+      APP_ENV: production
+      SITE_URL: ${SITE_URL:?Falta en el .env}
+
+  web:
+    logging: *logging
+    security_opt: ['no-new-privileges:true']
+    environment:
+      SITE_URL: ${SITE_URL:?Falta en el .env}
+
+  caddy:
+    logging: *logging
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?Falta en el .env}
+    ports:
+      # HTTP/3
+      - '${HTTPS_PORT:-443}:443/udp'
+
+  backup:
+    build:
+      context: .
+      dockerfile: docker/backup/Dockerfile
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER:?Falta en el .env}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Falta en el .env}
+      PGDATABASE: ${POSTGRES_DB:?Falta en el .env}
+      # Solo la clave pública vive en el servidor: quien lo comprometa no puede leer los backups.
+      BACKUP_AGE_RECIPIENT: ${BACKUP_AGE_RECIPIENT:?Falta en el .env}
+      BACKUP_CRON: ${BACKUP_CRON:-0 6 * * *}
+      BACKUP_KEEP_LOCAL: ${BACKUP_KEEP_LOCAL:-14}
+      BACKUP_KEEP_REMOTE_DAYS: ${BACKUP_KEEP_REMOTE_DAYS:-90}
+      BACKUP_RCLONE_REMOTE: ${BACKUP_RCLONE_REMOTE:-}
+      BACKUP_HEARTBEAT_URL: ${BACKUP_HEARTBEAT_URL:-}
+      RCLONE_CONFIG: /config/rclone.conf
+    volumes:
+      - uploads:/data/uploads
+      - backups:/backups
+      # Credenciales del destino externo. El archivo real nunca se versiona.
+      - ${RCLONE_CONF:-./docker/backup/rclone.empty.conf}:/config/rclone.conf:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'backup-healthcheck']
+      interval: 1h
+      timeout: 5s
+      retries: 1
+      start_period: 1m
+
+volumes:
+  backups:

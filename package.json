@@ -24,7 +24,8 @@
     "build": "npm run build --workspaces",
     "test:e2e:up": "docker compose -p portfolio-e2e --env-file e2e/e2e.env up -d --build --wait",
     "test:e2e:down": "docker compose -p portfolio-e2e --env-file e2e/e2e.env down -v",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:restore": "bash scripts/backup-restore-test.sh"
   },
   "allowScripts": {
     "prisma@7.10.1": true,

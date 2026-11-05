@@ -81,6 +81,13 @@ jobs:
           path: test-results/
           retention-days: 7
 
+  restore:
+    name: Backup y restauración
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: npm run test:restore
+
   secrets:
     name: Escaneo de secretos
     runs-on: ubuntu-latest

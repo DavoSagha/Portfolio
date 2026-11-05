@@ -1,5 +1,2 @@
-* text=auto eol=lf
-*.pdf binary
-*.png binary
-*.jpg binary
-*.webp binary
+# Los scripts corren en contenedores Linux: siempre con LF, también en un checkout de Windows.
+*.sh text eol=lf
