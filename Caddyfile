@@ -1,0 +1,19 @@
+{$SITE_ADDRESS::80} {
+	encode zstd gzip
+
+	# Caddy no confía en el X-Forwarded-For que manda el cliente (no hay trusted_proxies):
+	# lo reemplaza por la IP real. La API confía en exactamente un salto (trust proxy = 1).
+	@api path /api/* /cv /cv/* /files/*
+	handle @api {
+		reverse_proxy api:4000
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+
+	header {
+		-Server
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	}
+}

@@ -1,0 +1,8 @@
+# Solo para desarrollo: expone Postgres en localhost y crea la base de tests.
+# Uso: npm run db:up
+services:
+  db:
+    ports:
+      - '127.0.0.1:${DB_PORT:-5432}:5432'
+    volumes:
+      - ./docker/postgres/init-test-db.sql:/docker-entrypoint-initdb.d/10-test-db.sql:ro
