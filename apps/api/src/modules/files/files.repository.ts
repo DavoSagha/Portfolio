@@ -49,20 +49,16 @@ export class FilesRepository {
   /** Borra el registro si ya nada lo usa y devuelve su clave de disco; si no, null. */
   deleteIfUnreferenced(id: string) {
     return this.db.$transaction(async (tx) => {
-      const file = await tx.storedFile.findUnique({
-        where: { id },
-        include: {
-          _count: {
-            select: {
-              profilePhotoOf: true,
-              projectCoverOf: true,
-              projectImages: true,
-              cvVersions: true,
-            },
-          },
-        },
-      });
-      if (!file || Object.values(file._count).some((count) => count > 0)) return null;
+      const file = await tx.storedFile.findUnique({ where: { id } });
+      if (!file) return null;
+      // Una consulta por vez: dentro de una transacción comparten una sola conexión.
+      const uses = [
+        await tx.profile.count({ where: { photoFileId: id } }),
+        await tx.project.count({ where: { coverFileId: id } }),
+        await tx.projectImage.count({ where: { fileId: id } }),
+        await tx.cvVersion.count({ where: { fileId: id } }),
+      ];
+      if (uses.some((count) => count > 0)) return null;
       await tx.storedFile.delete({ where: { id } });
       return file.storageKey;
     });

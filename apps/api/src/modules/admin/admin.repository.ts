@@ -40,6 +40,11 @@ const projectInclude = {
   images: { orderBy: { order: 'asc' as const }, include: { translations: true } },
 };
 
+/*
+ * Las lecturas con `include` van afuera de las transacciones. Adentro, Prisma lanza las consultas
+ * de las relaciones en paralelo sobre una sola conexión, algo que `pg` 9 ya no va a permitir.
+ */
+
 /** Acceso a datos del panel: a diferencia del sitio público, ve también lo no publicado. */
 export class AdminRepository {
   constructor(private readonly db: Db) {}
@@ -90,8 +95,8 @@ export class AdminRepository {
     });
   }
 
-  updateCategory(id: string, { translations, ...fields }: CategoryPatch) {
-    return this.db.$transaction(async (tx) => {
+  async updateCategory(id: string, { translations, ...fields }: CategoryPatch) {
+    await this.db.$transaction(async (tx) => {
       await tx.skillCategory.update({ where: { id }, data: fields });
       for (const [locale, data] of entriesOf(translations)) {
         await tx.skillCategoryTranslation.upsert({
@@ -100,10 +105,10 @@ export class AdminRepository {
           update: data,
         });
       }
-      return tx.skillCategory.findUniqueOrThrow({
-        where: { id },
-        include: { translations: true },
-      });
+    });
+    return this.db.skillCategory.findUniqueOrThrow({
+      where: { id },
+      include: { translations: true },
     });
   }
 
@@ -189,7 +194,7 @@ export class AdminRepository {
 
   async createProject({ translations, skillIds, ...fields }: ProjectInput) {
     const { _max } = await this.db.project.aggregate({ _max: { order: true } });
-    return this.db.project.create({
+    const { id } = await this.db.project.create({
       data: {
         ...fields,
         order: nextOrder(_max.order),
@@ -198,12 +203,12 @@ export class AdminRepository {
         },
         skills: { create: skillIds.map((skillId) => ({ skillId })) },
       },
-      include: projectInclude,
     });
+    return this.db.project.findUniqueOrThrow({ where: { id }, include: projectInclude });
   }
 
-  updateProject(id: string, { translations, skillIds, ...fields }: ProjectPatch) {
-    return this.db.$transaction(async (tx) => {
+  async updateProject(id: string, { translations, skillIds, ...fields }: ProjectPatch) {
+    await this.db.$transaction(async (tx) => {
       await tx.project.update({
         where: { id },
         data: {
@@ -220,8 +225,8 @@ export class AdminRepository {
           update: data,
         });
       }
-      return tx.project.findUniqueOrThrow({ where: { id }, include: projectInclude });
     });
+    return this.db.project.findUniqueOrThrow({ where: { id }, include: projectInclude });
   }
 
   deleteProject(id: string) {
@@ -298,8 +303,8 @@ export class AdminRepository {
     });
   }
 
-  updateTimelineEntry(id: string, { translations, ...fields }: TimelinePatch) {
-    return this.db.$transaction(async (tx) => {
+  async updateTimelineEntry(id: string, { translations, ...fields }: TimelinePatch) {
+    await this.db.$transaction(async (tx) => {
       await tx.timelineEntry.update({ where: { id }, data: fields });
       for (const [locale, data] of entriesOf(translations)) {
         await tx.timelineEntryTranslation.upsert({
@@ -308,10 +313,10 @@ export class AdminRepository {
           update: data,
         });
       }
-      return tx.timelineEntry.findUniqueOrThrow({
-        where: { id },
-        include: { translations: true },
-      });
+    });
+    return this.db.timelineEntry.findUniqueOrThrow({
+      where: { id },
+      include: { translations: true },
     });
   }
 
@@ -352,8 +357,8 @@ export class AdminRepository {
     });
   }
 
-  updateLanguage(id: string, { translations, ...fields }: LanguagePatch) {
-    return this.db.$transaction(async (tx) => {
+  async updateLanguage(id: string, { translations, ...fields }: LanguagePatch) {
+    await this.db.$transaction(async (tx) => {
       await tx.language.update({ where: { id }, data: fields });
       for (const [locale, data] of entriesOf(translations)) {
         await tx.languageTranslation.upsert({
@@ -362,8 +367,8 @@ export class AdminRepository {
           update: data,
         });
       }
-      return tx.language.findUniqueOrThrow({ where: { id }, include: { translations: true } });
     });
+    return this.db.language.findUniqueOrThrow({ where: { id }, include: { translations: true } });
   }
 
   deleteLanguage(id: string) {
