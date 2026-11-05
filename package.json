@@ -1,0 +1,39 @@
+{
+  "name": "portfolio",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "engines": {
+    "node": ">=26.0.0"
+  },
+  "scripts": {
+    "dev:api": "npm run dev -w apps/api",
+    "dev:web": "npm run dev -w apps/web",
+    "db:up": "docker compose -f compose.yaml -f compose.dev.yaml up -d db",
+    "db:down": "docker compose -f compose.yaml -f compose.dev.yaml stop db",
+    "db:migrate": "npm run db:migrate -w apps/api",
+    "db:seed": "npm run seed -w apps/api",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "npm run typecheck --workspaces",
+    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build --workspaces"
+  },
+  "allowScripts": {
+    "prisma@7.10.1": true,
+    "@prisma/engines@7.10.1": true,
+    "esbuild@0.28.2": true
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.4.5",
+    "globals": "17.14.0",
+    "prettier": "3.9.10",
+    "typescript-eslint": "8.72.1"
+  }
+}

@@ -30,3 +30,12 @@ Thumbs.db
 !.vscode/extensions.json
 .idea/
 *.log
+
+# Cliente de Prisma generado
+apps/api/src/generated/
+
+# Generado por Next.js
+apps/web/next-env.d.ts
+
+# Archivos personales locales (CV, foto): nunca se versionan
+private/
