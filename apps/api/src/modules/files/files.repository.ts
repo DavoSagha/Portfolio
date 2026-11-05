@@ -19,4 +19,18 @@ export class FilesRepository {
       },
     });
   }
+
+  createFile(data: {
+    storageKey: string;
+    originalName: string;
+    mimeType: string;
+    size: number;
+    sha256: string;
+  }) {
+    return this.db.storedFile.create({ data });
+  }
+
+  setProfilePhoto(fileId: string) {
+    return this.db.profile.update({ where: { id: 1 }, data: { photoFileId: fileId } });
+  }
 }
