@@ -125,6 +125,9 @@ PHOTO_URL="$(curl -fsS "$BASE/api/v1/public/home" | sed -E 's/.*"photoUrl":"([^"
 PHOTO_BEFORE="$(curl -fsS "$BASE$PHOTO_URL" | sha256sum | cut -d' ' -f1)"
 [ "$CV_BEFORE" = "$(sha256sum < "$WORK/cv.pdf" | cut -d' ' -f1)" ] || fail "el CV subido no coincide"
 
+step "Backup manual, con el comando de docs/deploy.md"
+compose exec -T backup backup
+
 step "Backup automático: lo dispara el cron, con estos datos ya cargados"
 AFTER_LOAD="$(compose exec -T backup date -u +%Y%m%dT%H%M%SZ | tr -d '\r')"
 FILE=""
@@ -179,8 +182,12 @@ if curl -fsS "$BASE/cv/backend" > /dev/null 2>&1; then fail "el CV sigue disponi
 step "Restauración desde la copia externa, como si el servidor se hubiera perdido"
 compose stop api web > /dev/null 2>&1
 compose cp "$WORK/$NAME" backup:/backups/ > /dev/null
-compose cp "$WORK/age.key" backup:/run/age.key > /dev/null
-compose exec -T -e RESTORE_CONFIRM=SI backup restore "/backups/$NAME"
+# Los mismos comandos que docs/deploy.md, con la pregunta de confirmación incluida.
+if echo NO | compose run --rm -T -v "$WORK/age.key:/run/age.key:ro" backup restore "/backups/$NAME" > /dev/null 2>&1; then
+  fail "restauró sin la confirmación"
+fi
+[ "$(sql 'SELECT count(*) FROM "Project"')" = "0" ] || fail "restauró aunque se respondió NO"
+echo SI | compose run --rm -T -v "$WORK/age.key:/run/age.key:ro" backup restore "/backups/$NAME"
 compose start api web > /dev/null 2>&1
 wait_site
 
