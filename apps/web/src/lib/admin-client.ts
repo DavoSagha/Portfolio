@@ -1,3 +1,5 @@
+import { clearSessionHint } from './session-hint';
+
 /** Cliente del panel en el navegador. Mismo origen: la cookie de sesión viaja sola. */
 
 export interface ApiErrorDetail {
@@ -65,6 +67,7 @@ export async function request<T = unknown>(url: string, options: RequestOptions 
     if (csrfToken) res = await send(url, options);
   }
   if (res.status === 401 && !url.endsWith('/auth/login')) {
+    clearSessionHint();
     // Fuera de un componente no hay router; una recarga completa además limpia el estado.
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.assign('/admin/login');
@@ -80,4 +83,18 @@ export const adminRequest = <T = unknown>(path: string, options?: RequestOptions
 
 export function forgetCsrfToken() {
   csrfToken = null;
+}
+
+/**
+ * Cierra la sesión con su token CSRF y borra la marca. Si la sesión ya había vencido, el
+ * resultado es el mismo. Si falla por otro motivo, lanza el error y conserva la marca.
+ */
+export async function logout() {
+  csrfToken = await loadCsrfToken();
+  if (csrfToken) {
+    const res = await send('/api/v1/auth/logout', { method: 'POST' });
+    if (!res.ok && res.status !== 401) throw await toApiError(res);
+  }
+  forgetCsrfToken();
+  clearSessionHint();
 }

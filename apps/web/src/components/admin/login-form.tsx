@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, useTransition, type FormEvent } from 'react';
 import { ApiError, forgetCsrfToken, request } from '@/lib/admin-client';
+import { setSessionHint } from '@/lib/session-hint';
 import { Button, TextField } from './fields';
 
 export function LoginForm() {
@@ -21,6 +22,7 @@ export function LoginForm() {
           json: { username: data.get('username'), password: data.get('password') },
         });
         forgetCsrfToken();
+        setSessionHint();
         router.replace('/admin');
         router.refresh();
       } catch (err) {

@@ -103,6 +103,11 @@
 }
 
 @layer components {
+  /* Mientras se verifica la sesión: invisible, pero conserva su lugar (D-032). */
+  :root[data-session-hint] .footer-access {
+    visibility: hidden;
+  }
+
   /* Dato pendiente (marcador TODO del seed): bien visible para no publicarlo por error. */
   .todo {
     @apply rounded-sm border border-dashed border-danger px-1 font-mono text-danger;

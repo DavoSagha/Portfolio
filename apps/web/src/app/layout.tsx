@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from 'next';
 import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
 import type { ReactNode } from 'react';
+import { FooterAccess } from '@/components/footer-access';
 import { SiteHeader } from '@/components/site-header';
 import { themeInitScript } from '@/components/theme-toggle';
 import { Container } from '@/components/ui';
 import { api } from '@/lib/api';
+import { sessionHintInitScript } from '@/lib/session-hint';
 import { SITE_URL } from '@/lib/site';
 import './globals.css';
 
@@ -76,6 +78,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <script dangerouslySetInnerHTML={{ __html: sessionHintInitScript }} />
       </head>
       <body className="flex min-h-dvh flex-col">
         <a
@@ -88,11 +91,13 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <main id="contenido" className="flex-1">
           {children}
         </main>
-        <footer className="border-t border-border py-8 text-sm text-muted">
-          <Container>
-            <p>
+        <footer className="border-t border-border py-6 text-sm text-muted">
+          {/* En celular, dos filas: el contenido de la segunda cambia sin mover nada. */}
+          <Container className="flex flex-col sm:min-h-11 sm:flex-row sm:items-center sm:justify-between">
+            <p className="flex min-h-11 items-center">
               {name} · {new Date().getFullYear()}
             </p>
+            <FooterAccess />
           </Container>
         </footer>
       </body>

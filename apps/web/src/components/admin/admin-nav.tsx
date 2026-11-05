@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useTransition } from 'react';
-import { forgetCsrfToken, request } from '@/lib/admin-client';
+import { useEffect, useTransition } from 'react';
+import { logout as closeSession } from '@/lib/admin-client';
+import { setSessionHint } from '@/lib/session-hint';
 import { Button } from './fields';
 
 const LINKS = [
@@ -22,10 +23,12 @@ export function AdminNav({ username }: { username: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
+  // Esta página solo se renderiza con sesión: cubre también las sesiones sin marca.
+  useEffect(() => setSessionHint(), []);
+
   const logout = () =>
     startTransition(async () => {
-      await request('/api/v1/auth/logout', { method: 'POST' });
-      forgetCsrfToken();
+      await closeSession();
       router.replace('/admin/login');
       router.refresh();
     });
