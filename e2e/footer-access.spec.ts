@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ADMIN, STORAGE_STATE } from './support';
+import { ADMIN, NO_SESSION, STORAGE_STATE } from './support';
 
 const HINT_KEY = 'panel-session-hint';
 const VIEWPORTS = [
@@ -93,7 +93,7 @@ for (const { name, viewport } of VIEWPORTS) {
         page,
         browser,
       }) => {
-        const anonymous = await browser.newContext({ viewport });
+        const anonymous = await browser.newContext({ viewport, storageState: NO_SESSION });
         const anonymousPage = await anonymous.newPage();
         await anonymousPage.goto('/');
         const publicNavbar = await anonymousPage.getByRole('banner').innerText();

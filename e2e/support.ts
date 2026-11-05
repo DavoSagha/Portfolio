@@ -10,6 +10,9 @@ export const STORAGE_STATE = 'test-results/admin-state.json';
 export const SITE_REFRESH_TIMEOUT = 75_000;
 export const SLOW_TEST_TIMEOUT = 240_000;
 
+/** Playwright aplica el storageState de `test.use` también a browser.newContext(): se anula. */
+export const NO_SESSION = { cookies: [], origins: [] };
+
 export const unique = (prefix: string) =>
   `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 
