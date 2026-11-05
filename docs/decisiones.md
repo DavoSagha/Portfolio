@@ -304,7 +304,8 @@ Verificadas con `npm view` (2026-11) y fijadas exactas (`save-exact`), con el lo
   - **Sin saltos:** un script previo al pintado oculta "Acceso" con `visibility: hidden`, que conserva su lugar. El footer tiene un alto fijo, y en celular usa dos filas.
   - **Cerrar sesión:** envía el token CSRF, revoca la sesión en la base y borra la marca.
   - **Sin precarga:** los links usan `prefetch={false}`. Si no, Next pediría `/admin` en cada visita y el servidor consultaría la sesión.
-  - **Indexación:** `/admin` no está en `sitemap.xml` y mantiene `noindex`. El link lleva `rel="nofollow"`.
+  - **Indexación:** `/admin` no está en `sitemap.xml` y mantiene `noindex` ([D-033](#d-033-admin-sin-bloqueo-en-robotstxt)). El link lleva `rel="nofollow"`.
+  - **Dentro del panel:** el footer no muestra accesos ni consulta `/auth/me`: queda la navegación lateral.
   - **Métricas (Fase 4):** la exclusión de las visitas propias depende de una sesión válida en el backend, nunca de la marca. Una marca falsa no excluye a nadie, y una sesión vencida vuelve a contar.
 - **Alternativas:**
   - Leer la sesión en el servidor: el HTML público variaría por usuario y no se podría cachear.
@@ -312,3 +313,9 @@ Verificadas con `npm view` (2026-11) y fijadas exactas (`save-exact`), con el lo
   - Una cookie legible como marca: viajaría al servidor en cada request, sin ningún uso allí.
 - **Efecto aceptado:** `/auth/me` renueva la inactividad, así que navegar el sitio público con sesión la mantiene viva. El límite absoluto de 7 días no cambia.
 - **Motivo:** el acceso es cómodo sin exponer nada ni penalizar a los visitantes, y la seguridad sigue dependiendo solo del backend.
+
+## D-033. `/admin` sin bloqueo en `robots.txt`
+
+- **Decisión:** `robots.txt` bloquea solo `/api/`. `/admin` mantiene la meta `noindex`, `X-Robots-Tag`, `rel="nofollow"` en el link del footer y su exclusión del sitemap.
+- **Alternativa:** mantener `Disallow: /admin`. Un buscador bloqueado nunca lee el `noindex`, y como cada página pública enlaza al panel, podría listar la URL sin contenido.
+- **Motivo:** el `noindex` solo funciona si se puede leer. El panel sigue protegido por sesión, y su URL ya es visible en el footer.

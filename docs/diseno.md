@@ -118,7 +118,7 @@ Mobile first. Cada sección se renderiza solo si `sections.<nombre>` es verdader
 
 ## Acceso al panel
 
-El footer tiene un link discreto "Acceso", en texto y sin destacar. Con sesión activa se reemplaza por "Panel" y "Cerrar sesión". El navbar no cambia ([D-032](decisiones.md#d-032-acceso-al-panel-desde-el-footer)).
+El footer tiene un link discreto "Acceso", en texto y sin destacar. Con sesión activa se reemplaza por "Panel" y "Cerrar sesión", salvo dentro del panel, donde queda solo su navegación lateral. El navbar no cambia ([D-032](decisiones.md#d-032-acceso-al-panel-desde-el-footer)).
 
 ## Panel de administración
 
@@ -131,5 +131,5 @@ El footer tiene un link discreto "Acceso", en texto y sin destacar. Con sesión 
 - HTML semántico, un solo `h1` por página, "saltar al contenido", `lang="es"` y contraste AA verificado (tabla de arriba).
 - Imágenes con `alt` obligatorio desde el panel. La foto se sirve con `next/image` y tamaños responsivos.
 - **Metadatos:** `title` y `description` por página, y Open Graph con la imagen del perfil o la portada del proyecto.
-- **Indexación:** `sitemap.xml` generado desde las rutas publicadas. `robots.txt` excluye `/admin`, que además envía `noindex`.
+- **Indexación:** `sitemap.xml` generado desde las rutas publicadas. `/admin` queda fuera del sitemap y envía `noindex`, y `robots.txt` no lo bloquea para que los buscadores puedan leer ese `noindex`.
 - **Objetivo:** Lighthouse mobile ≥ 90 en rendimiento, accesibilidad, buenas prácticas y SEO (se mide en la Fase 5).
