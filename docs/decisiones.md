@@ -216,3 +216,32 @@ Verificadas con `npm view` (2026-11) y fijadas exactas (`save-exact`), con el lo
 
 - **Decisión:** `next/image` con `unoptimized` para las imágenes de `/files/*`.
 - **Motivo:** la API va a reprocesar cada imagen al subirla (tamaño y formato, Fase 3), así que optimizarla otra vez en Next duplica trabajo. Además, el optimizador tendría que pedir la imagen a la API desde dentro del contenedor de Next.
+
+## D-027. Paginación de proyectos solo en celular, como mejora progresiva
+
+- **Contexto:** en celular, una lista larga de tarjetas obliga a hacer mucho scroll. En escritorio, la grilla de dos columnas no lo necesita.
+- **Decisión:**
+  - **Servidor:** renderiza **todos** los proyectos en el HTML. El componente de cliente `PaginatedProjectList` solo oculta (atributo `hidden`) los que no corresponden a la página, de a 3, y solo en celular (`max-width: 767.98px`, el mismo corte que `md` de Tailwind).
+  - **URL:** la página vive en `?pagina=N` y se actualiza con `history.pushState`, que Next sincroniza con `useSearchParams` sin volver a pedir la página al servidor. Funcionan Atrás, Adelante y los links compartidos. Un valor inválido (`0`, `-1`, `1.5`, `abc`, mayor que el total) muestra la página 1.
+  - **Escritorio:** se ven todos y la URL no cambia, así que al volver a celular se conserva la página.
+  - **Cambio de página:** la vista va al inicio de la lista (`scrollIntoView`, sin animación si `prefers-reduced-motion: reduce`) y el foco pasa a la lista (`tabIndex=-1`).
+  - **Accesibilidad:** `<nav aria-label="Paginación de proyectos">`, botones con `aria-current="page"`, "Anterior" y "Siguiente" deshabilitados en los extremos, indicador "Página X de Y" con `aria-live="polite"` y objetivos táctiles de 44 px.
+  - **Sin paginación** con 3 proyectos o menos, en escritorio, en el inicio (que muestra solo los destacados) y sin JavaScript.
+- **Alternativas:**
+  - **Paginación en el servidor** (`?pagina=2` devuelve solo 3 proyectos): los demás links no estarían en el HTML, y en escritorio habría que paginar o pedir todo de nuevo.
+  - **"Cargar más" o scroll infinito:** sin URL por estado, y peor para teclado y lectores de pantalla.
+  - **Carrusel o swipe:** descartado por el diseño (sin carruseles) y por accesibilidad.
+  - **Una librería de paginación:** son menos de 150 líneas y sin dependencias.
+- **Motivo:** SEO y robustez (todo está en el HTML), estado compartible en la URL y accesibilidad completa, sin dependencias nuevas.
+- **Pruebas:** `e2e/projects-pagination.spec.ts` (Playwright, viewport de 390 × 844) cubre el cambio de página, la URL, Atrás y Adelante, páginas inválidas, el uso con teclado, el foco, el paso a escritorio, el funcionamiento sin JavaScript y el inicio sin paginación.
+
+## D-028. Foto de perfil por consola, reprocesada
+
+- **Decisión:** `photo:import` usa `ImageService`, el mismo que usará el panel. Valida el tipo real (JPG, PNG o WebP) y un máximo de 5 MB, y reprocesa la imagen con `sharp`:
+  - aplica la orientación EXIF;
+  - limita el lado mayor a 1600 px;
+  - la guarda como WebP **sin ningún metadato** (EXIF, GPS, XMP, ICC).
+
+  Una imagen con firma válida pero que no se puede decodificar se rechaza con 415.
+
+- **Motivo:** el requisito de eliminar metadatos se cumple desde la primera foto, no recién con el panel. `sharp` ya estaba prevista en D-017.

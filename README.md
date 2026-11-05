@@ -46,6 +46,15 @@ docker compose exec api node dist/cli/cv-import.js --profile backend --file /tmp
 - **Validación:** solo se aceptan PDF reales (verificados por su contenido) de hasta 5 MB.
 - **Reemplazo:** cada carga crea una versión nueva y conserva las anteriores.
 
+### Cargar la foto de perfil
+
+```sh
+docker compose cp ./foto.jpg api:/tmp/foto.jpg
+docker compose exec api node dist/cli/photo-import.js --file /tmp/foto.jpg
+```
+
+La imagen se valida (JPG, PNG o WebP, hasta 5 MB) y se guarda como WebP, sin metadatos (EXIF, GPS).
+
 ### Contenido pendiente
 
 Los datos que todavía faltan se ven resaltados en el sitio (`TODO: …`). Para listarlos:
@@ -73,15 +82,17 @@ npm run lint           # ESLint (incluye reglas de accesibilidad para la web)
 npm run format:check   # Prettier
 npm run typecheck      # TypeScript estricto en ambas apps
 npm test               # Vitest + Supertest contra PostgreSQL real (base *_test)
+npm run test:e2e       # Playwright contra el stack levantado con docker compose
 npm run build
 ```
 
-Para los tests hace falta `npm run db:up`. Por seguridad, solo corren contra una base cuyo nombre termina en `_test`.
+Para los tests hace falta `npm run db:up`, y para los end-to-end, el stack completo (`docker compose up --build`) más `npx playwright install chromium` la primera vez. Por seguridad, solo corren contra una base cuyo nombre termina en `_test`.
 
 El CI (GitHub Actions) ejecuta todo lo anterior y además:
 
 - `npm audit` de las dependencias de producción;
 - el build de las imágenes Docker;
+- las pruebas end-to-end contra el stack completo;
 - un escaneo de secretos con gitleaks.
 
 ## Producción
