@@ -4,6 +4,13 @@ import type { DateRange, MetricsRepository } from './metrics.repository.js';
 const TOP_LIMIT = 10;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/** Fecha desde la que se conservan los eventos: 12 meses calendario hacia atrás (D-035). */
+export function eventRetentionCutoff(now = new Date()) {
+  const cutoff = new Date(now);
+  cutoff.setUTCFullYear(cutoff.getUTCFullYear() - 1);
+  return cutoff;
+}
+
 export class MetricsService {
   constructor(private readonly repo: MetricsRepository) {}
 

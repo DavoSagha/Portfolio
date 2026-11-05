@@ -3,6 +3,8 @@ import { loadEnv } from './config/env.js';
 import { createDb } from './db/client.js';
 import { AuthRepository } from './modules/auth/auth.repository.js';
 import { DisabledMailer, SmtpMailer } from './modules/contact/mailer.js';
+import { MetricsRepository } from './modules/metrics/metrics.repository.js';
+import { eventRetentionCutoff } from './modules/metrics/metrics.service.js';
 import { LocalDiskStorage } from './storage/local-disk-storage.js';
 
 const PURGE_AFTER_MS = 24 * 60 * 60 * 1000;
@@ -34,13 +36,19 @@ const app = createApp({
 });
 
 const authRepository = new AuthRepository(db);
-const purge = () =>
-  authRepository
-    .purgeExpired(new Date(Date.now() - PURGE_AFTER_MS))
-    .catch((err: unknown) => console.error('No se pudieron limpiar las sesiones:', err));
-void purge();
+const metricsRepository = new MetricsRepository(db);
+const maintenance = async () => {
+  try {
+    await authRepository.purgeExpired(new Date(Date.now() - PURGE_AFTER_MS));
+    const deleted = await metricsRepository.deleteEventsBefore(eventRetentionCutoff());
+    if (deleted > 0) console.log(`Retención: ${deleted} eventos de más de 12 meses borrados.`);
+  } catch (err) {
+    console.error('Falló el mantenimiento periódico:', err);
+  }
+};
+void maintenance();
 // unref: este temporizador no impide que el proceso termine.
-setInterval(() => void purge(), PURGE_EVERY_MS).unref();
+setInterval(() => void maintenance(), PURGE_EVERY_MS).unref();
 
 const server = app.listen(env.PORT, () => {
   console.log(`API escuchando en el puerto ${env.PORT} (${env.APP_ENV})`);

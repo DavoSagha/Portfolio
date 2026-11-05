@@ -1,6 +1,8 @@
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { VisitorHasher, normalizeRef } from '../../src/modules/metrics/event-recorder.js';
+import { MetricsRepository } from '../../src/modules/metrics/metrics.repository.js';
+import { eventRetentionCutoff } from '../../src/modules/metrics/metrics.service.js';
 import { runSeed } from '../../src/seed/seed.js';
 import { adminClient } from '../helpers/admin.js';
 import { createTestApp, samplePdf } from '../helpers/app.js';
@@ -186,6 +188,38 @@ describe('normalizeRef', () => {
     expect(normalizeRef('a b')).toBeNull();
     expect(normalizeRef(['a'])).toBeNull();
     expect(normalizeRef(undefined)).toBeNull();
+  });
+});
+
+describe('retención de eventos', () => {
+  it('el corte son 12 meses calendario', () => {
+    expect(eventRetentionCutoff(new Date('2026-11-05T12:00:00Z')).toISOString()).toBe(
+      '2025-11-05T12:00:00.000Z',
+    );
+  });
+
+  it('borra solo lo anterior al corte, y nunca toca los mensajes', async () => {
+    const event = (createdAt: string) =>
+      db.event.create({
+        data: { type: 'PAGE_VIEW', path: '/', visitorHash: 'h', createdAt: new Date(createdAt) },
+      });
+    const oldMessage = await db.contactMessage.create({
+      data: {
+        name: 'Ana',
+        email: 'ana@ejemplo.com',
+        body: 'Un mensaje viejo',
+        createdAt: new Date('2020-01-01T00:00:00Z'),
+      },
+    });
+    await event('2025-11-05T11:59:59Z');
+    await event('2025-11-05T12:00:00Z');
+    await event('2026-11-05T11:00:00Z');
+
+    const repo = new MetricsRepository(db);
+    const cutoff = eventRetentionCutoff(new Date('2026-11-05T12:00:00Z'));
+    expect(await repo.deleteEventsBefore(cutoff)).toBe(1);
+    expect(await db.event.count()).toBe(2);
+    expect(await db.contactMessage.findUnique({ where: { id: oldMessage.id } })).not.toBeNull();
   });
 });
 

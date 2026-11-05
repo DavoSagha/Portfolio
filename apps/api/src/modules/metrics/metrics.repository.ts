@@ -20,6 +20,12 @@ export class MetricsRepository {
     return this.db.event.create({ data });
   }
 
+  /** Borra los eventos anteriores a la fecha y devuelve cuántos eran. */
+  async deleteEventsBefore(date: Date) {
+    const { count } = await this.db.event.deleteMany({ where: { createdAt: { lt: date } } });
+    return count;
+  }
+
   countByType({ from, until }: DateRange) {
     return this.db.event.groupBy({
       by: ['type'],
