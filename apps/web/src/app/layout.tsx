@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
+import { headers } from 'next/headers';
 import type { ReactNode } from 'react';
 import { Analytics } from '@/components/analytics';
 import { FooterAccess } from '@/components/footer-access';
@@ -70,6 +71,8 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const home = await safeHome();
   const name = home?.profile.fullName ?? 'Portfolio';
+  // Lo genera proxy.ts: la CSP solo deja correr los scripts que lo llevan.
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
   return (
     // El script de tema modifica data-theme antes de hidratar.
     <html
@@ -78,8 +81,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       suppressHydrationWarning
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-        <script dangerouslySetInnerHTML={{ __html: sessionHintInitScript }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: sessionHintInitScript }} />
       </head>
       <body className="flex min-h-dvh flex-col">
         <a
