@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
 import type { ReactNode } from 'react';
+import { Analytics } from '@/components/analytics';
 import { FooterAccess } from '@/components/footer-access';
 import { SiteHeader } from '@/components/site-header';
 import { themeInitScript } from '@/components/theme-toggle';
@@ -87,6 +88,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         >
           Saltar al contenido
         </a>
+        <Analytics />
         <SiteHeader name={name} sections={home?.sections ?? null} />
         <main id="contenido" className="flex-1">
           {children}

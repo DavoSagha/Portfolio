@@ -15,6 +15,8 @@ const LINKS = [
   { href: '/admin/skills', label: 'Skills' },
   { href: '/admin/idiomas', label: 'Idiomas' },
   { href: '/admin/cv', label: 'CV' },
+  { href: '/admin/mensajes', label: 'Mensajes' },
+  { href: '/admin/metricas', label: 'Métricas' },
 ];
 
 /** Lateral en escritorio y una lista simple en celular (docs/diseno.md). */

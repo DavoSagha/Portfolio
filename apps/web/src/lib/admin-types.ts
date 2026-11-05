@@ -93,3 +93,37 @@ export interface AdminCv {
     versions: { id: string; label: string; uploadedAt: string; size: number }[];
   }[];
 }
+
+export interface AdminMessage {
+  id: string;
+  name: string;
+  email: string;
+  body: string;
+  createdAt: string;
+  readAt: string | null;
+  emailSentAt: string | null;
+  emailError: string | null;
+}
+
+export interface AdminMessagesPage {
+  items: AdminMessage[];
+  unreadCount: number;
+  nextCursor: string | null;
+}
+
+export interface AdminMetricsSummary {
+  pageViews: number;
+  uniqueVisitors: number;
+  cvDownloads: number;
+  projectClicks: number;
+  contactSubmits: number;
+  byRef: { ref: string; pageViews: number; cvDownloads: number }[];
+  byCvVersion: {
+    profile: string | null;
+    versionId: string;
+    label: string | null;
+    downloads: number;
+  }[];
+  topPages: { path: string; views: number }[];
+  topProjects: { slug: string; title: string; clicks: number }[];
+}

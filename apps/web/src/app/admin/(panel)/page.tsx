@@ -11,6 +11,12 @@ const SECTIONS = [
   { href: '/admin/skills', title: 'Skills', text: 'Categorías, skills y niveles.' },
   { href: '/admin/idiomas', title: 'Idiomas', text: 'Idiomas y niveles.' },
   { href: '/admin/cv', title: 'CV', text: 'Versiones por perfil y CV principal.' },
+  {
+    href: '/admin/mensajes',
+    title: 'Mensajes',
+    text: 'Lo que llega por el formulario de contacto.',
+  },
+  { href: '/admin/metricas', title: 'Métricas', text: 'Visitas, descargas, clics y origen.' },
 ];
 
 export default function AdminHomePage() {

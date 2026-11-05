@@ -18,6 +18,8 @@
   --color-danger: #f2877a;
   --color-border: #2a3530;
   --color-border-strong: #66736c;
+  /* Marcas de gráficos: el ámbar del acento, un paso más oscuro sobre fondo oscuro. */
+  --color-chart: #c17f20;
 
   /* Tipografía: las variables las define next/font en layout.tsx */
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
@@ -47,6 +49,7 @@
     --color-danger: #b3261e;
     --color-border: #d5dbd7;
     --color-border-strong: #7a867f;
+    --color-chart: #8a5a00;
   }
 }
 
@@ -62,6 +65,7 @@
   --color-danger: #b3261e;
   --color-border: #d5dbd7;
   --color-border-strong: #7a867f;
+  --color-chart: #8a5a00;
 }
 
 @layer base {

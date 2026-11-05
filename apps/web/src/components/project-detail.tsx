@@ -56,6 +56,7 @@ export function ProjectDetailView({ project }: { project: ProjectDetail }) {
 
       <div className="mt-6">
         <ProjectLinks
+          slug={project.slug}
           demoUrl={project.demoUrl}
           repoUrl={project.repoUrl}
           demoNote={project.demoNote}

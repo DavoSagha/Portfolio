@@ -41,24 +41,25 @@ export function ProjectStack({ stack, className }: { stack: string[]; className?
 }
 
 export function ProjectLinks({
+  slug,
   demoUrl,
   repoUrl,
   demoNote,
-}: Pick<ProjectCardData, 'demoUrl' | 'repoUrl' | 'demoNote'>) {
+}: Pick<ProjectCardData, 'slug' | 'demoUrl' | 'repoUrl' | 'demoNote'>) {
   if (!demoUrl && !repoUrl) return null;
   return (
     <div className="text-sm">
       <ul className="flex flex-wrap gap-4">
         {demoUrl && (
           <li>
-            <a href={demoUrl} rel="noopener" target="_blank">
+            <a href={demoUrl} rel="noopener" target="_blank" data-project-click={slug}>
               Ver demo<span className="sr-only"> (abre en otra pestaña)</span>
             </a>
           </li>
         )}
         {repoUrl && (
           <li>
-            <a href={repoUrl} rel="noopener" target="_blank">
+            <a href={repoUrl} rel="noopener" target="_blank" data-project-click={slug}>
               Ver código<span className="sr-only"> (abre en otra pestaña)</span>
             </a>
           </li>
@@ -81,7 +82,11 @@ export function ProjectCard({
     <article className="flex h-full flex-col gap-3 rounded-md border border-border bg-surface p-5">
       <ProjectKind team={project.team} origin={project.origin} inProgress={project.inProgress} />
       <Heading className="text-xl">
-        <Link href={`/proyectos/${project.slug}`} className="text-text hover:text-accent">
+        <Link
+          href={`/proyectos/${project.slug}`}
+          data-project-click={project.slug}
+          className="text-text hover:text-accent"
+        >
           {project.title}
         </Link>
       </Heading>
@@ -97,10 +102,15 @@ export function ProjectCard({
       )}
       <ProjectStack stack={project.stack} />
       <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-2">
-        <Link href={`/proyectos/${project.slug}`} className="text-sm">
+        <Link
+          href={`/proyectos/${project.slug}`}
+          data-project-click={project.slug}
+          className="text-sm"
+        >
           Ver detalle<span className="sr-only"> de {project.title}</span>
         </Link>
         <ProjectLinks
+          slug={project.slug}
           demoUrl={project.demoUrl}
           repoUrl={project.repoUrl}
           demoNote={project.demoNote}
