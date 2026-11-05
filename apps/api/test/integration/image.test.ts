@@ -77,4 +77,14 @@ describe('ImageService', () => {
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toBe('image/webp');
   });
+
+  it('rechaza una imagen chica en bytes pero enorme al decodificarse', async () => {
+    const bomb = await sharp({
+      create: { width: 7000, height: 7000, channels: 3, background: '#000000' },
+    })
+      .png()
+      .toBuffer();
+    expect(bomb.length).toBeLessThan(IMAGE_MAX_BYTES);
+    await expect(service.sanitize(bomb)).rejects.toMatchObject({ status: 415 });
+  });
 });

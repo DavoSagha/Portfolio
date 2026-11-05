@@ -2,7 +2,7 @@
 set -eu
 
 # 1. Migraciones versionadas: siempre, son idempotentes.
-npx prisma migrate deploy
+node /app/node_modules/prisma/build/index.js migrate deploy
 
 # 2. Seed (D-011): automático solo en desarrollo, y aun así carga datos solo si la base
 #    no tiene contenido. En producción nunca corre al arrancar: se ejecuta a mano con

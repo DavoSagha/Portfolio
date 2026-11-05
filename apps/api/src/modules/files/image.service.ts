@@ -8,6 +8,8 @@ import type { FilesRepository } from './files.repository.js';
 
 export const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 const MAX_DIMENSION = 1600;
+// Una imagen de pocos KB puede ocupar gigabytes al decodificarse: 40 MP sobran para una foto.
+const MAX_INPUT_PIXELS = 40_000_000;
 const IMAGE_KINDS = new Set(['jpg', 'png', 'webp']);
 
 /**
@@ -31,7 +33,7 @@ export class ImageService {
       throw new AppError(415, 'UNSUPPORTED_FILE_TYPE', 'La imagen debe ser JPG, PNG o WebP');
     }
     try {
-      return await sharp(data, { failOn: 'error' })
+      return await sharp(data, { failOn: 'error', limitInputPixels: MAX_INPUT_PIXELS })
         .rotate() // aplica la orientación EXIF antes de descartar los metadatos
         .resize({
           width: MAX_DIMENSION,

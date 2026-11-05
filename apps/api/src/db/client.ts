@@ -5,5 +5,6 @@ export type Db = PrismaClient;
 
 export function createDb(databaseUrl: string): Db {
   const adapter = new PrismaPg({ connectionString: databaseUrl });
-  return new PrismaClient({ adapter });
+  // minimal: los errores que llegan al log no incluyen fragmentos de la consulta ni sus datos.
+  return new PrismaClient({ adapter, errorFormat: 'minimal' });
 }
