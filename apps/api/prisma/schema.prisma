@@ -1,0 +1,365 @@
+// Modelo de datos documentado en docs/modelo-datos.md.
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Locale {
+  es
+  en
+  fr
+}
+
+enum SkillLevel {
+  BASIC
+  INTERMEDIATE
+  SOLID
+}
+
+enum ProjectStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum ProjectTeam {
+  INDIVIDUAL
+  GROUP
+}
+
+enum ProjectOrigin {
+  ACADEMIC
+  PERSONAL
+  PROFESSIONAL
+}
+
+enum TimelineType {
+  EXPERIENCE
+  EDUCATION
+  CERTIFICATION
+}
+
+enum DatePrecision {
+  MONTH
+  YEAR
+}
+
+enum LanguageLevel {
+  NATIVE
+  A1
+  A2
+  B1
+  B2
+  C1
+  C2
+}
+
+enum CvProfileKey {
+  BACKEND
+  MAINFRAME
+  SOPORTE
+}
+
+enum EventType {
+  PAGE_VIEW
+  CV_DOWNLOAD
+  PROJECT_CLICK
+  CONTACT_SUBMIT
+}
+
+// ── Autenticación ──────────────────────────────────────────────
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  username     String    @unique
+  passwordHash String
+  createdAt    DateTime  @default(now()) @db.Timestamptz
+  updatedAt    DateTime  @updatedAt @db.Timestamptz
+  sessions     Session[]
+}
+
+model Session {
+  id         String    @id @default(cuid())
+  tokenHash  String    @unique
+  userId     String
+  user       AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  csrfToken  String
+  createdAt  DateTime  @default(now()) @db.Timestamptz
+  lastSeenAt DateTime  @default(now()) @db.Timestamptz
+  expiresAt  DateTime  @db.Timestamptz
+  revokedAt  DateTime? @db.Timestamptz
+  userAgent  String?
+
+  @@index([userId, revokedAt])
+}
+
+model LoginThrottle {
+  keyHash     String    @id
+  failures    Int       @default(0)
+  lockedUntil DateTime? @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @db.Timestamptz
+}
+
+// ── Archivos ───────────────────────────────────────────────────
+
+model StoredFile {
+  id             String         @id @default(cuid())
+  storageKey     String         @unique
+  originalName   String
+  mimeType       String
+  size           Int
+  sha256         String
+  createdAt      DateTime       @default(now()) @db.Timestamptz
+  profilePhotoOf Profile[]      @relation("ProfilePhoto")
+  projectCoverOf Project[]      @relation("ProjectCover")
+  projectImages  ProjectImage[]
+  cvVersions     CvVersion[]
+}
+
+// ── Perfil ─────────────────────────────────────────────────────
+
+model Profile {
+  id               Int                  @id @default(1)
+  fullName         String
+  location         String
+  linkedinUrl      String?
+  githubUrl        String?
+  publicEmail      String?
+  showEmail        Boolean              @default(false)
+  photoFileId      String?
+  photo            StoredFile?          @relation("ProfilePhoto", fields: [photoFileId], references: [id], onDelete: SetNull)
+  primaryCvProfile CvProfileKey         @default(BACKEND)
+  updatedAt        DateTime             @updatedAt @db.Timestamptz
+  translations     ProfileTranslation[]
+}
+
+model ProfileTranslation {
+  profileId    Int
+  profile      Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  locale       Locale
+  headline     String
+  valueProp    String
+  summary      String
+  availability String
+
+  @@id([profileId, locale])
+}
+
+// ── Skills ─────────────────────────────────────────────────────
+
+model SkillCategory {
+  id           String                     @id @default(cuid())
+  order        Int                        @default(0)
+  published    Boolean                    @default(true)
+  translations SkillCategoryTranslation[]
+  skills       Skill[]
+}
+
+model SkillCategoryTranslation {
+  categoryId String
+  category   SkillCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  locale     Locale
+  name       String
+
+  @@id([categoryId, locale])
+}
+
+model Skill {
+  id         String         @id @default(cuid())
+  categoryId String
+  category   SkillCategory  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  name       String
+  /// null = nivel sin definir. Una skill sin nivel no se puede publicar.
+  level      SkillLevel?
+  order      Int            @default(0)
+  published  Boolean        @default(false)
+  projects   ProjectSkill[]
+
+  @@unique([categoryId, name])
+  @@index([categoryId, order])
+}
+
+model ProjectSkill {
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  skillId   String
+  skill     Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, skillId])
+}
+
+// ── Proyectos ──────────────────────────────────────────────────
+
+model Project {
+  id              String               @id @default(cuid())
+  slug            String               @unique
+  status          ProjectStatus        @default(DRAFT)
+  featured        Boolean              @default(false)
+  /// null = dato pendiente
+  team            ProjectTeam?
+  /// null = dato pendiente
+  origin          ProjectOrigin?
+  startDate       DateTime?            @db.Date
+  endDate         DateTime?            @db.Date
+  demoUrl         String?
+  repoUrl         String?
+  coverFileId     String?
+  cover           StoredFile?          @relation("ProjectCover", fields: [coverFileId], references: [id], onDelete: SetNull)
+  order           Int                  @default(0)
+  createdAt       DateTime             @default(now()) @db.Timestamptz
+  updatedAt       DateTime             @updatedAt @db.Timestamptz
+  translations    ProjectTranslation[]
+  images          ProjectImage[]
+  skills          ProjectSkill[]
+  timelineEntries TimelineEntry[]
+
+  @@index([status, featured, order])
+}
+
+model ProjectTranslation {
+  projectId    String
+  project      Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  locale       Locale
+  title        String
+  summary      String
+  role         String
+  context      String?
+  problem      String?
+  solution     String?
+  architecture String?
+  decisions    String?
+  challenges   String?
+  learnings    String?
+  limitations  String?
+  disclaimer   String?
+
+  @@id([projectId, locale])
+}
+
+model ProjectImage {
+  id           String                    @id @default(cuid())
+  projectId    String
+  project      Project                   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  fileId       String
+  file         StoredFile                @relation(fields: [fileId], references: [id], onDelete: Restrict)
+  order        Int                       @default(0)
+  translations ProjectImageTranslation[]
+
+  @@index([projectId, order])
+}
+
+model ProjectImageTranslation {
+  imageId String
+  image   ProjectImage @relation(fields: [imageId], references: [id], onDelete: Cascade)
+  locale  Locale
+  alt     String
+
+  @@id([imageId, locale])
+}
+
+// ── Trayectoria ────────────────────────────────────────────────
+
+model TimelineEntry {
+  id               String                     @id @default(cuid())
+  type             TimelineType
+  organization     String
+  startDate        DateTime                   @db.Date
+  endDate          DateTime?                  @db.Date
+  /// Precisión con la que se muestran las fechas: mes y año, o solo año.
+  datePrecision    DatePrecision              @default(MONTH)
+  credentialUrl    String?
+  relatedProjectId String?
+  relatedProject   Project?                   @relation(fields: [relatedProjectId], references: [id], onDelete: SetNull)
+  order            Int                        @default(0)
+  published        Boolean                    @default(true)
+  translations     TimelineEntryTranslation[]
+
+  @@index([published, startDate])
+}
+
+model TimelineEntryTranslation {
+  entryId     String
+  entry       TimelineEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  locale      Locale
+  title       String
+  description String?
+
+  @@id([entryId, locale])
+}
+
+// ── Idiomas ────────────────────────────────────────────────────
+
+model Language {
+  id           String                @id @default(cuid())
+  code         String                @unique
+  level        LanguageLevel
+  order        Int                   @default(0)
+  published    Boolean               @default(true)
+  translations LanguageTranslation[]
+}
+
+model LanguageTranslation {
+  languageId String
+  language   Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
+  locale     Locale
+  name       String
+
+  @@id([languageId, locale])
+}
+
+// ── CV ─────────────────────────────────────────────────────────
+
+model CvProfile {
+  key              CvProfileKey @id
+  /// Versión vigente: es un puntero y no un flag, para que no pueda haber dos vigentes.
+  currentVersionId String?      @unique
+  currentVersion   CvVersion?   @relation("CurrentVersion", fields: [currentVersionId], references: [id], onDelete: SetNull)
+  versions         CvVersion[]  @relation("Versions")
+}
+
+model CvVersion {
+  id         String       @id @default(cuid())
+  profileKey CvProfileKey
+  profile    CvProfile    @relation("Versions", fields: [profileKey], references: [key], onDelete: Restrict)
+  fileId     String
+  file       StoredFile   @relation(fields: [fileId], references: [id], onDelete: Restrict)
+  label      String
+  uploadedAt DateTime     @default(now()) @db.Timestamptz
+  currentOf  CvProfile?   @relation("CurrentVersion")
+
+  @@index([profileKey, uploadedAt])
+}
+
+// ── Contacto y métricas ────────────────────────────────────────
+
+model ContactMessage {
+  id          String    @id @default(cuid())
+  name        String
+  email       String
+  body        String
+  createdAt   DateTime  @default(now()) @db.Timestamptz
+  readAt      DateTime? @db.Timestamptz
+  emailSentAt DateTime? @db.Timestamptz
+  emailError  String?
+
+  @@index([readAt, createdAt])
+}
+
+model Event {
+  id          BigInt    @id @default(autoincrement())
+  type        EventType
+  path        String
+  ref         String?
+  targetId    String?
+  visitorHash String
+  createdAt   DateTime  @default(now()) @db.Timestamptz
+
+  @@index([type, createdAt])
+  @@index([ref, createdAt])
+}
