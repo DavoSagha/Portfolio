@@ -245,3 +245,16 @@ Verificadas con `npm view` (2026-11) y fijadas exactas (`save-exact`), con el lo
   Una imagen con firma válida pero que no se puede decodificar se rechaza con 415.
 
 - **Motivo:** el requisito de eliminar metadatos se cumple desde la primera foto, no recién con el panel. `sharp` ya estaba prevista en D-017.
+
+## D-029. Stack, estado y secciones vacías de los proyectos
+
+- **Contexto:** el stack de cada proyecto incluye herramientas que no son skills del perfil (Vite, Vitest, Tailwind, la API de Gemini). Además, un proyecto puede estar en desarrollo, y no todos tienen textos para todas las secciones del detalle.
+- **Decisión:**
+  - `Project.stack` (lista de texto, en orden) es lo que se muestra como "Tecnologías". La relación `ProjectSkill` se mantiene para vincular skills del perfil con proyectos ("Usada en …").
+  - `Project.inProgress` (booleano) agrega la etiqueta "En desarrollo".
+  - Un texto vacío no se muestra, y la API lo devuelve como `null`. Aplica al aporte propio (`role`), al aviso y a las secciones del detalle. Reemplaza al marcador `TODO:` para las secciones del detalle: ya no se consideran pendientes, solo no se muestran.
+  - Los datos confirmados por el titular reemplazan a los del documento de requisitos cuando difieren.
+- **Alternativas:**
+  - Derivar el stack de `ProjectSkill`: obligaría a crear skills para herramientas que no se quieren mostrar como skills.
+  - Un enumerado de estado (en desarrollo, terminado, pausado): no hace falta por ahora; un booleano alcanza y se puede ampliar.
+- **Motivo:** mostrar solo contenido real, sin inventar textos para completar secciones.

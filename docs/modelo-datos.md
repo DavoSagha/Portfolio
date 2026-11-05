@@ -141,23 +141,27 @@ Una skill con `published = false` no aparece en el sitio. Una categoría se mues
 
 ### Project
 
-| Campo                | Tipo                                    | Notas                                          |
-| -------------------- | --------------------------------------- | ---------------------------------------------- |
-| id                   | cuid                                    |                                                |
-| slug                 | text, único                             | URL `/proyectos/:slug`                         |
-| status               | `DRAFT \| PUBLISHED`                    |                                                |
-| featured             | boolean                                 | por defecto `false`; destacados en el inicio   |
-| team                 | `INDIVIDUAL \| GROUP`?                  | null = dato pendiente (se muestra como `TODO`) |
-| origin               | `ACADEMIC \| PERSONAL \| PROFESSIONAL`? | null = dato pendiente                          |
-| startDate, endDate   | date?                                   |                                                |
-| demoUrl, repoUrl     | text?                                   | se muestran solo si existen                    |
-| coverFileId          | → StoredFile?                           |                                                |
-| order                | int                                     |                                                |
-| createdAt, updatedAt | timestamptz                             |                                                |
+| Campo                | Tipo                                    | Notas                                         |
+| -------------------- | --------------------------------------- | --------------------------------------------- |
+| id                   | cuid                                    |                                               |
+| slug                 | text, único                             | URL `/proyectos/:slug`                        |
+| status               | `DRAFT \| PUBLISHED`                    |                                               |
+| featured             | boolean                                 | por defecto `false`; destacados en el inicio  |
+| team                 | `INDIVIDUAL \| GROUP`?                  | null = dato pendiente (no se muestra)         |
+| origin               | `ACADEMIC \| PERSONAL \| PROFESSIONAL`? | null = dato pendiente (no se muestra)         |
+| inProgress           | boolean                                 | por defecto `false`; etiqueta "En desarrollo" |
+| stack                | text[]                                  | tecnologías en orden; texto libre             |
+| startDate, endDate   | date?                                   |                                               |
+| demoUrl, repoUrl     | text?                                   | se muestran solo si existen                   |
+| coverFileId          | → StoredFile?                           |                                               |
+| order                | int                                     |                                               |
+| createdAt, updatedAt | timestamptz                             |                                               |
 
 Índice `(status, featured, order)`.
 
-**ProjectTranslation:** `title`, `summary` (problema en una línea, para la tarjeta), `role`, `context`, `problem`, `solution`, `architecture`, `decisions`, `challenges`, `learnings`, `limitations?` y `disclaimer?`. Si `disclaimer` tiene texto, se muestra destacado en la tarjeta y en el detalle; es el caso de un proyecto sin afiliación con la marca que usa.
+**ProjectTranslation:** `title`, `summary` (problema en una línea, para la tarjeta), `role`, `context`, `problem`, `solution`, `architecture`, `decisions`, `challenges`, `learnings`, `limitations?` y `disclaimer?`. Si `disclaimer` tiene texto, se muestra destacado en la tarjeta y en el detalle; es el caso de un proyecto sin afiliación con la marca que usa. Un texto vacío no se muestra: ni el aporte (`role`) ni las secciones del detalle ([D-029](decisiones.md#d-029-stack-estado-y-secciones-vacías-de-los-proyectos)).
+
+**Fase 3:** se suma `demoNote?` a `ProjectTranslation`, un aviso opcional junto al link de la demo (por ejemplo, que puede tardar en cargar por estar en un hosting gratuito).
 
 **ProjectImage:** `id`, `projectId` (Cascade), `fileId`, `order`. **ProjectImageTranslation:** `alt`.
 

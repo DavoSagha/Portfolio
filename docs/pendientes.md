@@ -6,50 +6,31 @@ En la base, los textos faltantes llevan el prefijo `TODO:` y los enumerados o UR
 
 ## Contenido
 
+El perfil, las skills, los proyectos, la trayectoria y los CV están completos y confirmados. `content:todos` no informa pendientes. Lo que sigue no se muestra mientras falte.
+
 ### Perfil
 
+- [x] Titular, frase de valor, resumen, disponibilidad, ubicación y email público.
 - [x] Foto, cargada con `photo:import` y reprocesada sin metadatos ([D-028](decisiones.md#d-028-foto-de-perfil-por-consola-reprocesada)).
-- [ ] Frase de valor (`valueProp`).
-- [ ] Texto de disponibilidad.
-- [ ] Resumen (`summary`). Los CV tienen un texto de "Perfil" distinto por perfil, y falta definir cuál se usa.
-- [ ] Titular. El acordado ("Backend Developer Jr · JavaScript/TypeScript · Go · COBOL") difiere del CV Backend ("Desarrollador Backend Jr | JavaScript, Node.js, Go").
-- [ ] Email público, y si se muestra. Hay una dirección en los CV; mientras no se confirme, no se carga.
-- [ ] Ubicación. Los CV indican barrio; el sitio usa la ubicación general ("CABA, Argentina").
 
 ### CV
 
-- [x] PDF de los perfiles `backend`, `mainframe` y `soporte`, cargados con `cv:import`.
-- [x] CV principal (`/cv`): `backend`.
-- [ ] Qué hacer con la versión de prueba "Prueba local" que quedó en el historial del perfil `backend`. Ya no se descarga.
+- [x] PDF vigentes de los perfiles `backend`, `mainframe` y `soporte`, cargados con `cv:import`. CV principal: `backend`.
+- [x] Versión de prueba borrada del historial y del disco.
 
 ### Skills
 
-- [ ] Nivel (básico, intermedio o sólido) de cada skill y cuáles se muestran. Las que no se confirmen quedan ocultas, incluida **TypeScript**, que no figura en ningún CV.
-- [ ] Skills que aparecen en los CV pero no en la lista acordada: C++, SORT, IDCAMS, Excel, Canva, CapCut, armado de PC, cambio de pasta térmica y reemplazo de placas de video.
-- [ ] Vínculos skill → proyecto (más allá de los que ya surgen de los roles).
+- [x] Nivel de cada skill, todas publicadas. Categoría "Contenido y diseño" al final.
 
 ### Proyectos
 
-Destacados en el inicio: Sweet Medical, appFut y Formación mainframe.
+Destacados en el inicio, en este orden: appFut, Carta digital para La Catedral del Pisco y Formación mainframe. Ningún proyecto tiene demo por ahora; se cargan desde el panel (Fase 3).
 
-| Proyecto                                      | Pendiente                                                                                   |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| appFut                                        | stack, demo, repo y origen. Equipo: grupal. Los CV lo indican "en desarrollo".              |
-| Menú digital                           | stack, demo, repo y equipo. Aviso de no afiliación también en la demo (repositorio aparte). |
-| Sweet Medical                                 | repo y equipo                                                                               |
-| Simulador de sistema operativo                | repo y equipo                                                                               |
-| Formación mainframe                           | repo con ejemplos y equipo                                                                  |
-| Portfolio Full Stack (Argentina Programa 4.0) | figura en los CV pero no en la lista acordada: confirmar si se agrega                       |
-| Este portfolio                                | agregarlo como proyecto cuando esté publicado                                               |
-
-Para todos: contexto, problema, solución, arquitectura, decisiones, dificultades y aprendizajes del detalle, y las imágenes con texto alternativo.
-
-### Trayectoria
-
-- [x] Descripciones de la experiencia con la redacción de los CV.
-- [x] Links de las dos certificaciones.
-- [ ] "Armado y mantenimiento de PC (experiencia personal)" figura en el CV de Soporte pero no en la trayectoria acordada, y no tiene fechas.
-- [ ] Mostrar o no el nombre de la directora del grupo de investigación (figura en los CV).
+- [ ] Aporte propio en la carta digital: no se muestra hasta confirmarlo.
+- [ ] Secciones del detalle de appFut y de la carta digital: borradores pendientes de aprobación.
+- [ ] Aviso de no afiliación también en la demo de la carta digital (repositorio aparte).
+- [ ] Imágenes de los proyectos, con texto alternativo.
+- [ ] Este portfolio como proyecto, cuando esté publicado.
 
 ## Infraestructura (Fase 5)
 

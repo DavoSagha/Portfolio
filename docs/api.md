@@ -89,10 +89,12 @@ Devuelve `ProjectCard[]` ordenados por `order`:
   "title": "…",
   "summary": "…",
   "role": "…",
+  "inProgress": true,
+  "stack": ["Next.js 16", "React 19", "TypeScript"],
   "team": "GROUP",
   "origin": "PERSONAL",
   "featured": true,
-  "skills": [{ "name": "Node.js" }],
+  "skills": [{ "name": "TypeScript" }],
   "demoUrl": null,
   "repoUrl": null,
   "coverUrl": null,
@@ -100,7 +102,9 @@ Devuelve `ProjectCard[]` ordenados por `order`:
 }
 ```
 
-`team` y `origin` pueden ser `null` mientras el dato esté pendiente.
+- `team` y `origin` pueden ser `null` mientras el dato esté pendiente.
+- `role`, `disclaimer` y las secciones del detalle vuelven en `null` si están vacías.
+- `stack` es la lista de tecnologías que muestra la tarjeta. `skills` son las skills publicadas del perfil vinculadas al proyecto (las usa la sección de skills).
 
 ### `GET /public/projects/:slug`
 

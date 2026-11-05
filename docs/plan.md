@@ -90,8 +90,17 @@ Documentación: plan, modelo de datos, contratos de API, dos direcciones visuale
 
 - CRUD de todas las secciones, con orden, publicación y borradores.
 - Subida de imágenes y CV con validación de tipo real, versiones de CV, CV principal y previsualización de borradores y versiones anteriores.
+- **Proyectos y trayectoria editables por completo, sin tocar código.** El panel permite editar todos los campos públicos:
+  - **Proyectos:** título, resumen, aporte, secciones del detalle, stack, link de demo, link de repo, estado ("En desarrollo"), equipo, origen, aviso, orden, destacado y publicación.
+  - **Trayectoria:** tipo, título, organización, descripción, fechas y su precisión, link de la credencial, proyecto relacionado, orden y publicación.
+- **Links vacíos:** un link de demo, repo o credencial vacío no se muestra. Un texto vacío tampoco: la sección no aparece.
+- **Aviso de la demo:** campo opcional por proyecto (`demoNote`, traducible) para aclarar que la demo puede tardar en cargar por estar en un hosting gratuito. Se muestra junto al link de la demo, y solo si hay demo.
 
-**Aceptación:** el contenido, la foto y el CV se pueden cambiar desde el panel y se ven en el sitio público en 60 s o menos. La prueba end-to-end "editar una skill y verla en el sitio" queda en verde.
+**Aceptación:**
+
+- El contenido, la foto y el CV se pueden cambiar desde el panel y se ven en el sitio público en 60 s o menos.
+- Una demo se puede cargar, cambiar o quitar desde el panel, con su aviso, sin cambios de código.
+- Las pruebas de la Fase 3 de la tabla [Pruebas mínimas](#pruebas-mínimas) quedan en verde.
 
 ### Fase 4: contacto y métricas
 
@@ -136,19 +145,22 @@ Documentación: plan, modelo de datos, contratos de API, dos direcciones visuale
 | Rechazo de archivos inválidos (extensión falsa, tamaño excedido, tipo no permitido) | Supertest                 | 3    |
 | Reemplazo del CV y descarga de la nueva versión vigente                             | Supertest                 | 3    |
 | Editar una skill en el panel y verla en el sitio público                            | Playwright                | 3    |
+| Editar todos los campos públicos de un proyecto y de la trayectoria                 | Supertest                 | 3    |
+| Cargar una demo con su aviso, verla en el sitio, vaciarla y que el link desaparezca | Playwright                | 3    |
+| Un link vacío (demo, repo, credencial) o una sección vacía no se muestran           | Supertest + Playwright    | 3    |
 | Honeypot y límite de envíos del contacto                                            | Supertest                 | 4    |
 | Eventos y descargas con sesión de admin no se registran                             | Supertest                 | 4    |
 
 ## Riesgos y mitigaciones
 
-| Riesgo                                         | Mitigación                                                                                                                                     |
-| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Uso de una marca de terceros en un proyecto personal | Nombre solo en texto, sin logo ni imágenes oficiales. Aviso de "proyecto personal sin afiliación" visible en la tarjeta, el detalle y la demo. |
-| Bloqueo del login provocado por un tercero     | Clave de bloqueo por usuario + IP, bloqueo corto (15 min) y límite adicional por IP.                                                           |
-| Demora en ver cambios del panel en el sitio    | Caché de datos de 60 s, explicado como compromiso entre rendimiento y frescura.                                                                |
-| Límites de envío de Gmail                      | SMTP configurable por variables de entorno; el mensaje siempre se guarda primero en la base.                                                   |
-| Pérdida de datos del VPS                       | Backups automáticos a un destino externo y restauración probada (Fase 5).                                                                      |
-| Versiones de dependencias desactualizadas      | Versiones fijadas en el lockfile y revisión de actualizaciones en cada fase.                                                                   |
+| Riesgo                                        | Mitigación                                                                                                                                     |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Proyecto personal que nombra a un restaurante | Nombre solo en texto, sin logo ni imágenes oficiales. Aviso de "proyecto personal sin afiliación" visible en la tarjeta, el detalle y la demo. |
+| Bloqueo del login provocado por un tercero    | Clave de bloqueo por usuario + IP, bloqueo corto (15 min) y límite adicional por IP.                                                           |
+| Demora en ver cambios del panel en el sitio   | Caché de datos de 60 s, explicado como compromiso entre rendimiento y frescura.                                                                |
+| Límites de envío de Gmail                     | SMTP configurable por variables de entorno; el mensaje siempre se guarda primero en la base.                                                   |
+| Pérdida de datos del VPS                      | Backups automáticos a un destino externo y restauración probada (Fase 5).                                                                      |
+| Versiones de dependencias desactualizadas     | Versiones fijadas en el lockfile y revisión de actualizaciones en cada fase.                                                                   |
 
 ## Cobertura de requisitos
 
