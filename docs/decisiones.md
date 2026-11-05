@@ -319,3 +319,25 @@ Verificadas con `npm view` (2026-11) y fijadas exactas (`save-exact`), con el lo
 - **Decisión:** `robots.txt` bloquea solo `/api/`. `/admin` mantiene la meta `noindex`, `X-Robots-Tag`, `rel="nofollow"` en el link del footer y su exclusión del sitemap.
 - **Alternativa:** mantener `Disallow: /admin`. Un buscador bloqueado nunca lee el `noindex`, y como cada página pública enlaza al panel, podría listar la URL sin contenido.
 - **Motivo:** el `noindex` solo funciona si se puede leer. El panel sigue protegido por sesión, y su URL ya es visible en el footer.
+
+## D-034. Contacto y métricas
+
+- **Decisión:**
+  - **Envío del email:** después de responder, sin que la persona espere al proveedor. El mensaje ya está guardado, y el panel muestra si se envió, si falló y por qué.
+  - **Sin SMTP configurado:** la API arranca y avisa en el log; los mensajes se guardan. Las variables son todo o nada, para no fallar recién con el primer mensaje.
+  - **Remitente:** siempre la cuenta propia, con el visitante en `Reply-To`. Usar su email como remitente haría que el proveedor rechace el envío.
+  - **Exclusión del admin:** el backend valida la sesión contra la base en cada evento, sin renovar su inactividad. No usa la marca del footer ([D-032](#d-032-acceso-al-panel-desde-el-footer)).
+  - **Origen:** `?ref=` se guarda en `sessionStorage` y dura lo que la pestaña. Se aplica a las páginas siguientes y se agrega al link del CV al hacer clic.
+  - **Rutas:** solo la ruta, sin query string, para no guardar datos personales de una URL. Las rutas bajo `/admin` y `/api` no se registran.
+  - **Clics a proyectos:** un listener único y atributos `data-project-click`, así las tarjetas siguen siendo componentes de servidor. Los proyectos inexistentes no llegan al panel.
+  - **Gráfico:** una serie de barras con tabla alternativa. El color de las barras es un token propio, `--color-chart`, validado para cada tema.
+- **Alternativas:**
+  - Esperar el envío antes de responder: la persona esperaría al proveedor, y sabría si falló un servicio interno.
+  - Una cookie para el origen: el requisito es no usar cookies de seguimiento.
+  - Una librería de gráficos: para una sola serie alcanza con HTML y CSS.
+- **Limitaciones aceptadas:**
+  - **Links externos a tu CV:** al abrir `/cv` desde otro sitio (por ejemplo, LinkedIn), el navegador no envía la cookie `SameSite=Strict`, así que esa descarga cuenta aunque tengas sesión. Dentro del sitio sí se excluye.
+  - **Envíos interrumpidos:** si la API se reinicia en plena entrega, el mensaje queda guardado con el envío pendiente, sin reintento.
+  - **Límite de eventos:** es por IP, así que una red compartida puede perder eventos si supera los 60 por minuto.
+  - **Bots:** los que ejecutan JavaScript se cuentan como visitas.
+- **Motivo:** cumple "sin cookies de seguimiento y sin IP en crudo", y una falla de email o de métricas nunca afecta a quien visita el sitio.

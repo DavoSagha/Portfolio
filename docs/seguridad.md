@@ -1,6 +1,6 @@
 # Seguridad
 
-> Estado: las medidas de las Fases 1 a 3 están implementadas y cubiertas por pruebas. Las demás están **previstas**. La Fase 5 incluye una revisión completa.
+> Estado: las medidas de las Fases 1 a 4 están implementadas y cubiertas por pruebas. Las demás están **previstas**. La Fase 5 incluye una revisión completa.
 
 ## Activos
 
@@ -32,6 +32,7 @@
 | Subida de archivos maliciosos               | Lista blanca: PDF para el CV y JPG, PNG o WebP para imágenes. El tipo se detecta por magic bytes, con un límite de 5 MB. Los nombres los genera el sistema, las imágenes se reprocesan con `sharp` (se descarta EXIF) y nada se sirve desde una ruta ejecutable. | 3    |
 | Path traversal en archivos                  | Se accede a los archivos por id de la base. La `storageKey` la genera el sistema y nunca se arma una ruta con datos del cliente.                                                                                                                                 | 1    |
 | Exposición de borradores                    | Las rutas públicas filtran por `published` o `status`. La previsualización requiere sesión y envía `noindex`. `/files/:id` sirve solo archivos referenciados por contenido publicado.                                                                            | 1–3  |
+| Inyección de cabeceras en el email          | El nombre no admite saltos de línea ni caracteres de control, y el email se valida. El visitante va en `Reply-To`; el remitente es siempre la cuenta propia.                                                                                                     | 4    |
 | Spam en el contacto                         | Honeypot, límite de 5 por hora por IP, validación de largo y contenido guardado como texto.                                                                                                                                                                      | 4    |
 | Inflado de métricas                         | Límite de 60 eventos por minuto por IP en `/public/events`, tipos en lista blanca y largos acotados.                                                                                                                                                             | 4    |
 | Privacidad de los visitantes                | Sin cookies de seguimiento, sin IP en crudo y hash diario con sal en memoria (ver [D-016](decisiones.md#d-016-métricas-propias-sin-cookies)).                                                                                                                    | 4    |

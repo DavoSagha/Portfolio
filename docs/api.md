@@ -156,7 +156,9 @@ Body:
 
 - **Validación:** `name` de 1 a 100 caracteres, `email` válido, `message` de 10 a 5000.
 - **Honeypot:** `website` debe venir vacío. Si viene con contenido, responde 202 igual, pero el mensaje no se guarda ni se envía.
-- **Respuesta:** `202 { "status": "received" }`. El mensaje se guarda antes de intentar el envío por SMTP.
+- **Respuesta:** `202 { "status": "received" }`. El mensaje se guarda antes de intentar el envío por SMTP, que no bloquea la respuesta. Si falla, queda el motivo en `emailError`.
+- **Nombre:** sin saltos de línea ni caracteres de control, porque va en las cabeceras del email.
+- Registra `CONTACT_SUBMIT`, salvo con sesión de admin o si lo frena el honeypot.
 - **Límite:** 5 envíos por IP cada hora, y después 429.
 
 ### `POST /public/events`
@@ -168,7 +170,8 @@ Body:
 ```
 
 - **Origen:** lo envía `navigator.sendBeacon` desde la web.
-- **Validación:** `type` acepta solo `PAGE_VIEW` y `PROJECT_CLICK`. `CV_DOWNLOAD` y `CONTACT_SUBMIT` los registra el servidor. `path` admite hasta 200 caracteres y `ref` hasta 50, con el patrón `[a-z0-9_-]`.
+- **Validación:** `type` acepta solo `PAGE_VIEW` y `PROJECT_CLICK`. `CV_DOWNLOAD` y `CONTACT_SUBMIT` los registra el servidor. `path` admite hasta 200 caracteres, solo la ruta y sin query string. `ref` admite hasta 50, con el patrón `[a-z0-9_-]`. En `PROJECT_CLICK`, `targetId` es el `slug` del proyecto.
+- **Rutas privadas:** un `path` bajo `/admin` o `/api` responde 204 y no se registra.
 - **Límite:** 60 solicitudes por IP por minuto, y después 429.
 - **Respuesta:** `204` siempre, también cuando la request trae sesión de admin. En ese caso no se registra nada.
 
@@ -184,7 +187,7 @@ Body:
 | `/cv/:profile` | la versión vigente de ese perfil        |
 
 - `200 application/pdf` con `Content-Disposition: attachment; filename="CV-David-Saghatelyan-Backend.pdf"` y `Cache-Control: no-cache`. El link siempre devuelve la versión vigente.
-- (Fase 4) Registra `CV_DOWNLOAD` con `targetId = cvVersionId` y `ref` (tomado de `?ref=`), **salvo que la request traiga una sesión de admin válida**.
+- En un `GET` registra `CV_DOWNLOAD` con `targetId = cvVersionId` y `ref` (tomado de `?ref=`), **salvo que la request traiga una sesión de admin válida**.
 - 404 si el perfil no tiene versión vigente.
 
 ### `GET /files/:id`
@@ -281,7 +284,7 @@ Requiere sesión. No registra métricas y responde con `X-Robots-Tag: noindex`.
 
 ### Mensajes
 
-- `GET /admin/messages?unread=true&limit=&cursor=`
+- `GET /admin/messages?unread=true&limit=&cursor=`: `{ "items": [], "unreadCount": 0, "nextCursor": null }`.
 - `PATCH /admin/messages/:id { "read": true }`
 - `DELETE /admin/messages/:id`
 
@@ -299,10 +302,12 @@ Requiere sesión. No registra métricas y responde con `X-Robots-Tag: noindex`.
   "byRef": [{ "ref": "linkedin", "pageViews": 0, "cvDownloads": 0 }],
   "byCvVersion": [{ "profile": "backend", "versionId": "…", "label": "…", "downloads": 0 }],
   "topPages": [{ "path": "/", "views": 0 }],
-  "topProjects": [{ "slug": "…", "clicks": 0 }]
+  "topProjects": [{ "slug": "…", "title": "…", "clicks": 0 }]
 }
 ```
 
-`GET /admin/metrics/timeseries?type=PAGE_VIEW&from&to` devuelve `[{ "date": "2026-11-05", "count": 0 }]`.
+`GET /admin/metrics/timeseries?type=PAGE_VIEW&from&to` devuelve `[{ "date": "2026-11-05", "count": 0 }]`, con un punto por día, también los días sin eventos.
+
+Las fechas van en UTC y las dos se incluyen. Por defecto son los últimos 30 días, y el rango máximo es de 366 días. En `byCvVersion`, una versión borrada conserva sus descargas, con `profile` y `label` en `null`.
 
 `uniqueVisitors` suma los visitantes únicos de cada día, así que una misma persona que vuelve otro día cuenta otra vez (ver [modelo de datos](modelo-datos.md#event)).

@@ -249,7 +249,7 @@ El orden público es `startDate` descendente y después `order`.
 | type        | `PAGE_VIEW \| CV_DOWNLOAD \| PROJECT_CLICK \| CONTACT_SUBMIT` |                                                                                |
 | path        | text                                                          | máximo 200 caracteres                                                          |
 | ref         | text?                                                         | valor de `?ref=`, normalizado a minúsculas, máximo 50 caracteres, `[a-z0-9_-]` |
-| targetId    | text?                                                         | versión de CV, proyecto o tipo de link (`demo`, `repo`)                        |
+| targetId    | text?                                                         | versión de CV (`CV_DOWNLOAD`) o `slug` del proyecto (`PROJECT_CLICK`)          |
 | visitorHash | text                                                          | ver abajo                                                                      |
 | createdAt   | timestamptz                                                   |                                                                                |
 

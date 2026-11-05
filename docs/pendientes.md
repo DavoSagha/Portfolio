@@ -43,7 +43,10 @@ Destacados en el inicio, en este orden: appFut, Carta digital para La Catedral d
 
 - [x] Fijar las versiones exactas de las dependencias con `npm view` ([D-023](decisiones.md#d-023-versiones-fijadas-en-la-fase-1)).
 - [x] Documentar la instalación desde cero en el README.
-- [ ] Registro de eventos (`CV_DOWNLOAD`, visitas) y exclusión de las visitas del admin (Fase 4).
+- [x] Registro de eventos (`CV_DOWNLOAD`, visitas) y exclusión de las visitas del admin.
+- [ ] Probar el envío real con la cuenta de Gmail cuando exista la contraseña de aplicación.
+- [ ] Aviso de `pg` en los logs ("client.query() when the client is already executing a query"): revisar antes de actualizar a `pg` 9.
+- [ ] Definir cuánto tiempo se conservan los eventos y los mensajes (hoy no se borran solos).
 - [x] Al reemplazar la foto, la portada o una imagen, borrar el archivo anterior.
 - [ ] CSP de la web con nonce y revisión de cabeceras (Fase 5). La API ya tiene la CSP más estricta.
 - [ ] 8 vulnerabilidades moderadas en herramientas de desarrollo (`minimatch`, vía plugins de ESLint). No afectan a producción (`npm audit --omit=dev` da 0). Revisar cuando los plugins publiquen versiones compatibles, sin forzar.

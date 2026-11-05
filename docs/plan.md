@@ -151,6 +151,8 @@ Documentación: plan, modelo de datos, contratos de API, dos direcciones visuale
 | Honeypot y límite de envíos del contacto                                            | Supertest                 | 4    |
 | Eventos y descargas con sesión de admin no se registran                             | Supertest                 | 4    |
 | La marca del footer no excluye de las métricas: solo una sesión válida lo hace      | Supertest                 | 4    |
+| Email real con SMTP: remitente, destinatario y Reply-To                             | Integración               | 4    |
+| Formulario, panel de mensajes y métricas con y sin sesión                           | Playwright                | 4    |
 
 ## Riesgos y mitigaciones
 

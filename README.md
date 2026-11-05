@@ -55,6 +55,10 @@ docker compose exec api node dist/cli/photo-import.js --file /tmp/foto.jpg
 
 La imagen se valida (JPG, PNG o WebP, hasta 5 MB) y se guarda como WebP, sin metadatos (EXIF, GPS).
 
+### Email de contacto
+
+Los mensajes del formulario se guardan siempre y se ven en `/admin/mensajes`. Para recibirlos también por email, completá las variables `SMTP_*` y `CONTACT_TO` del `.env` (ver `.env.example`) y reiniciá la API. Con Gmail hace falta una contraseña de aplicación.
+
 ### Panel
 
 `/admin`, con el usuario creado por `admin-create`. Permite editar perfil, proyectos, trayectoria, skills, idiomas y CV. Los cambios se ven en el sitio en un minuto como máximo, sin redesplegar.
