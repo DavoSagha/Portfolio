@@ -23,12 +23,14 @@ export function FooterAccess() {
   const pathname = usePathname();
   // En el servidor no hay marca: se renderiza como un visitante.
   const hint = useSyncExternalStore(subscribeToSessionHint, hasSessionHint, () => false);
+  // Las páginas del panel ya tienen su navegación y solo se ven con sesión: acá no hay nada.
+  const inPanel = pathname.startsWith('/admin') && pathname !== '/admin/login';
   const [active, setActive] = useState(false);
   const [failed, setFailed] = useState(false);
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
-    if (!hint) return;
+    if (!hint || inPanel) return;
     const controller = new AbortController();
     fetch('/api/v1/auth/me', { signal: controller.signal })
       .then((res) => {
@@ -50,20 +52,21 @@ export function FooterAccess() {
       controller.abort();
       setActive(false);
     };
-  }, [hint]);
+  }, [hint, inPanel]);
 
   const signOut = () => {
     setFailed(false);
     startTransition(async () => {
       try {
         await logout();
-        if (pathname.startsWith('/admin')) router.replace('/admin/login');
         router.refresh();
       } catch {
         setFailed(true);
       }
     });
   };
+
+  if (inPanel) return null;
 
   if (hint && active) {
     return (

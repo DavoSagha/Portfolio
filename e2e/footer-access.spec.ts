@@ -115,6 +115,30 @@ for (const { name, viewport } of VIEWPORTS) {
         await expect(page.getByRole('heading', { name: 'Panel', level: 1 })).toBeVisible();
       });
 
+      test('dentro del panel el footer no muestra accesos: queda la navegación lateral', async ({
+        page,
+      }) => {
+        await withHint(page);
+        const seen = watchRequests(page);
+        await page.goto('/admin/proyectos', { waitUntil: 'networkidle' });
+        await expect(page.getByRole('navigation', { name: 'Panel' })).toBeVisible();
+        await expect(
+          page.getByRole('navigation', { name: 'Panel' }).getByRole('button', {
+            name: 'Cerrar sesión',
+          }),
+        ).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Cerrar sesión' })).toHaveCount(1);
+        await expect(panel(page)).toHaveCount(0);
+        await expect(signOut(page)).toHaveCount(0);
+        await expect(access(page)).toHaveCount(0);
+        expect(seen.me).toBe(0);
+
+        // Al volver al sitio público reaparecen.
+        await page.goto('/');
+        await expect(panel(page)).toBeVisible();
+        await expect(signOut(page)).toBeVisible();
+      });
+
       test('no hay saltos: "Acceso" no se ve mientras se verifica y el alto no cambia', async ({
         page,
       }) => {
@@ -206,6 +230,14 @@ test.describe('indexación', () => {
     }
     const login = await (await request.get('/admin/login')).text();
     expect(login).toMatch(/<meta name="robots" content="noindex/);
+  });
+
+  test('robots.txt no bloquea el panel: un buscador tiene que poder leer su noindex', async ({
+    request,
+  }) => {
+    const robots = await (await request.get('/robots.txt')).text();
+    expect(robots).not.toMatch(/Disallow:\s*\/admin/);
+    expect(robots).toMatch(/Disallow:\s*\/api\//);
   });
 
   test('el link del footer tiene nofollow', async ({ page }) => {
