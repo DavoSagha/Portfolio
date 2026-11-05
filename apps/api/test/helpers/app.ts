@@ -15,6 +15,7 @@ export async function createTestApp(db: Db, options: Pick<AppDeps, 'loginRateLim
   const app = createApp({ db, storage, loginRateLimit: options.loginRateLimit ?? NO_LIMIT });
   return {
     app,
+    uploadsDir,
     storage,
     cleanup: () => rm(uploadsDir, { recursive: true, force: true }),
   };

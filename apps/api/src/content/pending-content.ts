@@ -42,14 +42,6 @@ export async function findPendingContent(db: Db): Promise<string[]> {
     pending.push(`Skills sin nivel (ocultas): ${skillsWithoutLevel.map((s) => s.name).join(', ')}`);
   }
 
-  const certs = await db.timelineEntry.findMany({
-    where: { type: 'CERTIFICATION', credentialUrl: null },
-    include: { translations: true },
-  });
-  for (const c of certs) {
-    pending.push(`Certificación "${c.translations[0]?.title ?? c.id}" · link: falta`);
-  }
-
   const timeline = await db.timelineEntryTranslation.findMany();
   for (const t of timeline) checkTexts(`Trayectoria ${t.entryId} (${t.locale})`, t);
 

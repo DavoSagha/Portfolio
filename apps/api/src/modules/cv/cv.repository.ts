@@ -18,6 +18,38 @@ export class CvRepository {
     });
   }
 
+  findProfilesWithVersions() {
+    return this.db.cvProfile.findMany({
+      orderBy: { key: 'asc' },
+      include: {
+        versions: { orderBy: { uploadedAt: 'desc' }, include: { file: true } },
+      },
+    });
+  }
+
+  findVersion(id: string) {
+    return this.db.cvVersion.findUnique({
+      where: { id },
+      include: { file: true, currentOf: { select: { key: true } } },
+    });
+  }
+
+  setCurrent(key: CvProfileKey, versionId: string) {
+    return this.db.cvProfile.update({ where: { key }, data: { currentVersionId: versionId } });
+  }
+
+  setPrimary(key: CvProfileKey) {
+    return this.db.profile.update({ where: { id: 1 }, data: { primaryCvProfile: key } });
+  }
+
+  /** Cada versión tiene su propio archivo: se borran juntos y se devuelve la clave de disco. */
+  deleteVersionAndFile(id: string, fileId: string) {
+    return this.db.$transaction([
+      this.db.cvVersion.delete({ where: { id } }),
+      this.db.storedFile.delete({ where: { id: fileId } }),
+    ]);
+  }
+
   /** Crea el archivo y la versión, y opcionalmente la marca vigente, en una transacción. */
   createVersion(input: {
     profileKey: CvProfileKey;

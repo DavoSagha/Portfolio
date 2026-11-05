@@ -243,6 +243,8 @@ model ProjectTranslation {
   learnings    String?
   limitations  String?
   disclaimer   String?
+  /// Aviso junto al link de la demo. Se muestra solo si hay demo.
+  demoNote     String?
 
   @@id([projectId, locale])
 }

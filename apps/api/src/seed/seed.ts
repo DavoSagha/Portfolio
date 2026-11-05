@@ -80,7 +80,9 @@ export async function runSeed(db: Db): Promise<SeedResult> {
       projectIds.set(p.slug, project.id);
     }
 
-    for (const [index, entry] of data.timeline.entries()) {
+    // Del más reciente al más antiguo: desde el panel se puede cambiar a mano.
+    const timeline = [...data.timeline].sort((a, b) => b.startDate.localeCompare(a.startDate));
+    for (const [index, entry] of timeline.entries()) {
       await tx.timelineEntry.create({
         data: {
           type: entry.type,

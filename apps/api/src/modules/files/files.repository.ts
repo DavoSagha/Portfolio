@@ -30,7 +30,41 @@ export class FilesRepository {
     return this.db.storedFile.create({ data });
   }
 
-  setProfilePhoto(fileId: string) {
+  findFile(id: string) {
+    return this.db.storedFile.findUnique({ where: { id } });
+  }
+
+  async findProfilePhotoId() {
+    const profile = await this.db.profile.findUnique({
+      where: { id: 1 },
+      select: { photoFileId: true },
+    });
+    return profile?.photoFileId ?? null;
+  }
+
+  setProfilePhoto(fileId: string | null) {
     return this.db.profile.update({ where: { id: 1 }, data: { photoFileId: fileId } });
+  }
+
+  /** Borra el registro si ya nada lo usa y devuelve su clave de disco; si no, null. */
+  deleteIfUnreferenced(id: string) {
+    return this.db.$transaction(async (tx) => {
+      const file = await tx.storedFile.findUnique({
+        where: { id },
+        include: {
+          _count: {
+            select: {
+              profilePhotoOf: true,
+              projectCoverOf: true,
+              projectImages: true,
+              cvVersions: true,
+            },
+          },
+        },
+      });
+      if (!file || Object.values(file._count).some((count) => count > 0)) return null;
+      await tx.storedFile.delete({ where: { id } });
+      return file.storageKey;
+    });
   }
 }

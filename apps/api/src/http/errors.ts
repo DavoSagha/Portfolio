@@ -47,11 +47,32 @@ export const tooManyAttempts = (retryAfterSeconds: number) =>
     retryAfterSeconds,
   );
 
+const PRISMA_CONFLICT_CODES = new Set(['P2002', 'P2003', 'P2014']);
+
+/** Errores conocidos de Prisma y de multer, sin exponer nombres de tablas ni de columnas. */
+function knownLibraryError(err: unknown): AppError | null {
+  if (typeof err !== 'object' || err === null) return null;
+  const { code, name } = err as { code?: unknown; name?: unknown };
+  if (name === 'MulterError') {
+    return code === 'LIMIT_FILE_SIZE'
+      ? new AppError(413, 'FILE_TOO_LARGE', 'El archivo supera los 5 MB')
+      : new AppError(400, 'VALIDATION_ERROR', 'Formulario de archivo inválido');
+  }
+  if (name !== 'PrismaClientKnownRequestError' || typeof code !== 'string') return null;
+  if (code === 'P2025') return notFound();
+  if (code === 'P2002') return new AppError(409, 'CONFLICT', 'Ya existe un elemento con ese valor');
+  if (PRISMA_CONFLICT_CODES.has(code)) {
+    return new AppError(409, 'CONFLICT', 'El elemento está en uso o referencia a otro inexistente');
+  }
+  return null;
+}
+
 export const notFoundHandler: RequestHandler = (_req, _res, next) => {
   next(notFound('Ruta no encontrada'));
 };
 
-export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+export const errorHandler: ErrorRequestHandler = (rawErr, _req, res, _next) => {
+  const err: unknown = knownLibraryError(rawErr) ?? rawErr;
   if (err instanceof ZodError) {
     res.status(400).json({
       error: {

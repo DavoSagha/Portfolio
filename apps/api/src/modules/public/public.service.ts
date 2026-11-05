@@ -3,7 +3,11 @@ import { notFound } from '../../http/errors.js';
 import { DEFAULT_LOCALE, pickTranslation, toDateString } from '../../lib/locale.js';
 import type { PublicProject, PublicRepository } from './public.repository.js';
 
+type PublicProjectDetail = NonNullable<Awaited<ReturnType<PublicRepository['findProjectById']>>>;
+
 const fileUrl = (fileId: string | null) => (fileId ? `/files/${fileId}` : null);
+/** Los borradores no se sirven por /files: la previsualización usa la ruta con sesión. */
+const privateFileUrl = (fileId: string | null) => (fileId ? `/api/v1/admin/files/${fileId}` : null);
 /** Un texto vacío o solo con espacios es una sección sin contenido: se devuelve null y no se muestra. */
 const text = (value: string | null | undefined) => (value?.trim() ? value : null);
 
@@ -63,9 +67,24 @@ export class PublicService {
   async getProject(slug: string, locale: Locale) {
     const project = await this.repo.findPublishedProjectBySlug(slug);
     if (!project) throw notFound('Proyecto no encontrado');
+    return this.toDetail(project, locale, fileUrl);
+  }
+
+  /** La misma forma que el detalle público, en cualquier estado (D-021). */
+  async previewProject(id: string, locale: Locale) {
+    const project = await this.repo.findProjectById(id);
+    if (!project) throw notFound('Proyecto no encontrado');
+    return this.toDetail(project, locale, privateFileUrl);
+  }
+
+  private toDetail(
+    project: PublicProjectDetail,
+    locale: Locale,
+    urlOf: (fileId: string | null) => string | null,
+  ) {
     const t = pickTranslation(project.translations, locale);
     return {
-      ...this.toCard(project, locale),
+      ...this.toCard(project, locale, urlOf),
       context: text(t?.context),
       problem: text(t?.problem),
       solution: text(t?.solution),
@@ -77,7 +96,7 @@ export class PublicService {
       startDate: toDateString(project.startDate),
       endDate: toDateString(project.endDate),
       images: project.images.map((img) => ({
-        url: `/files/${img.fileId}`,
+        url: urlOf(img.fileId),
         alt: pickTranslation(img.translations, locale)?.alt ?? '',
       })),
     };
@@ -127,7 +146,11 @@ export class PublicService {
     }));
   }
 
-  private toCard(project: PublicProject, locale: Locale) {
+  private toCard(
+    project: PublicProject,
+    locale: Locale,
+    urlOf: (fileId: string | null) => string | null = fileUrl,
+  ) {
     const t = pickTranslation(project.translations, locale);
     return {
       slug: project.slug,
@@ -142,8 +165,10 @@ export class PublicService {
       skills: project.skills.map((ps) => ({ name: ps.skill.name })),
       demoUrl: project.demoUrl,
       repoUrl: project.repoUrl,
-      coverUrl: fileUrl(project.coverFileId),
+      coverUrl: urlOf(project.coverFileId),
       disclaimer: text(t?.disclaimer),
+      // El aviso acompaña al link: sin demo no tiene sentido mostrarlo.
+      demoNote: project.demoUrl ? text(t?.demoNote) : null,
     };
   }
 }

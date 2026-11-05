@@ -40,10 +40,22 @@ export class PublicRepository {
     });
   }
 
+  /** Solo para la previsualización del panel: un proyecto en cualquier estado. */
+  findProjectById(id: string) {
+    return this.db.project.findUnique({
+      where: { id },
+      include: {
+        translations: true,
+        skills: this.publishedSkillsOfProject,
+        images: { orderBy: { order: 'asc' }, include: { translations: true } },
+      },
+    });
+  }
+
   findPublishedTimeline() {
     return this.db.timelineEntry.findMany({
       where: { published: true },
-      orderBy: [{ startDate: 'desc' }, { order: 'asc' }],
+      orderBy: [{ order: 'asc' }, { startDate: 'desc' }],
       include: {
         translations: true,
         relatedProject: { select: { slug: true, status: true } },

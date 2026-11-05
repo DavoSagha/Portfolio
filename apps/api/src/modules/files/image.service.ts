@@ -3,6 +3,7 @@ import sharp from 'sharp';
 import { AppError } from '../../http/errors.js';
 import { detectFileKind, FILE_KINDS } from '../../lib/file-type.js';
 import type { StorageService } from '../../storage/storage.js';
+import { FileCleanup } from './file-cleanup.js';
 import type { FilesRepository } from './files.repository.js';
 
 export const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
@@ -64,8 +65,16 @@ export class ImageService {
   }
 
   async importProfilePhoto(input: { data: Buffer; originalName: string }) {
+    const previous = await this.repo.findProfilePhotoId();
     const file = await this.importImage(input);
     await this.repo.setProfilePhoto(file.id);
+    await new FileCleanup(this.repo, this.storage).remove([previous]);
     return file;
+  }
+
+  async removeProfilePhoto() {
+    const previous = await this.repo.findProfilePhotoId();
+    await this.repo.setProfilePhoto(null);
+    await new FileCleanup(this.repo, this.storage).remove([previous]);
   }
 }

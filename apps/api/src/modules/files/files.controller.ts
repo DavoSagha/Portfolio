@@ -28,4 +28,15 @@ export class FilesController {
     });
     await pipeline(stream, res);
   };
+
+  /** Para el panel: cualquier archivo, también de borradores. Requiere sesión (admin.routes). */
+  showPrivate = async (req: Request, res: Response) => {
+    const parsed = paramsSchema.safeParse(req.params);
+    if (!parsed.success) throw notFound('Archivo no encontrado');
+    const file = await this.repo.findFile(parsed.data.id);
+    if (!file) throw notFound('Archivo no encontrado');
+    const stream = await this.storage.getStream(file.storageKey);
+    res.status(200).set({ 'Content-Type': file.mimeType, 'Content-Length': String(file.size) });
+    await pipeline(stream, res);
+  };
 }
