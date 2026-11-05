@@ -4,14 +4,39 @@ import type { ProjectCard as ProjectCardData } from '@/lib/types';
 import { Text } from './text';
 import { Chip, Notice } from './ui';
 
-/** "GRUPAL · PERSONAL"; si falta un dato, lo muestra como pendiente en vez de suponerlo. */
-export function ProjectKind({ team, origin }: Pick<ProjectCardData, 'team' | 'origin'>) {
+/** "GRUPAL · PERSONAL · EN DESARROLLO". Un dato que falta no se muestra ni se supone. */
+export function ProjectKind({
+  team,
+  origin,
+  inProgress,
+}: Pick<ProjectCardData, 'team' | 'origin' | 'inProgress'>) {
+  const parts = [
+    team && TEAM_LABEL[team],
+    origin && ORIGIN_LABEL[origin],
+    inProgress && 'En desarrollo',
+  ].filter((part): part is string => Boolean(part));
+  if (parts.length === 0) return null;
   return (
     <p className="font-mono text-label tracking-(--text-label--letter-spacing) text-muted uppercase">
-      {team ? TEAM_LABEL[team] : <Text value="TODO: equipo" />}
-      <span aria-hidden="true"> · </span>
-      {origin ? ORIGIN_LABEL[origin] : <Text value="TODO: origen" />}
+      {parts.map((part, i) => (
+        <span key={part}>
+          {i > 0 && <span aria-hidden="true"> · </span>}
+          {part}
+        </span>
+      ))}
     </p>
+  );
+}
+
+/** Tecnologías del proyecto, en el orden cargado. */
+export function ProjectStack({ stack, className }: { stack: string[]; className?: string }) {
+  if (stack.length === 0) return null;
+  return (
+    <ul className={`flex flex-wrap gap-2 ${className ?? ''}`} aria-label="Tecnologías">
+      {stack.map((tech) => (
+        <Chip key={tech}>{tech}</Chip>
+      ))}
+    </ul>
   );
 }
 
@@ -47,7 +72,7 @@ export function ProjectCard({
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
   return (
     <article className="flex h-full flex-col gap-3 rounded-md border border-border bg-surface p-5">
-      <ProjectKind team={project.team} origin={project.origin} />
+      <ProjectKind team={project.team} origin={project.origin} inProgress={project.inProgress} />
       <Heading className="text-xl">
         <Link href={`/proyectos/${project.slug}`} className="text-text hover:text-accent">
           {project.title}
@@ -57,17 +82,13 @@ export function ProjectCard({
       <p>
         <Text value={project.summary} />
       </p>
-      <div className="text-sm text-muted">
-        <span className="font-medium text-text">Mi rol: </span>
-        <Text value={project.role} />
-      </div>
-      {project.skills.length > 0 && (
-        <ul className="flex flex-wrap gap-2" aria-label="Tecnologías">
-          {project.skills.map((s) => (
-            <Chip key={s.name}>{s.name}</Chip>
-          ))}
-        </ul>
+      {project.role && (
+        <div className="text-sm text-muted">
+          <span className="font-medium text-text">Mi aporte: </span>
+          <Text value={project.role} />
+        </div>
       )}
+      <ProjectStack stack={project.stack} />
       <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-2">
         <Link href={`/proyectos/${project.slug}`} className="text-sm">
           Ver detalle<span className="sr-only"> de {project.title}</span>

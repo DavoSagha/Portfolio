@@ -15,9 +15,16 @@ export function Hero({ home }: { home: Home }) {
           <p className="mt-4 text-lg font-medium text-text sm:text-xl">
             <Text value={profile.headline} />
           </p>
-          <p className="mt-4 text-muted">
-            <Text value={profile.valueProp} />
-          </p>
+          {profile.valueProp && (
+            <p className="mt-4 text-muted">
+              <Text value={profile.valueProp} />
+            </p>
+          )}
+          {profile.summary && (
+            <p className="mt-4">
+              <Text value={profile.summary} />
+            </p>
+          )}
           <ul
             className="mt-6 flex flex-wrap gap-x-6 gap-y-2 font-mono text-label text-muted"
             aria-label="Datos"
@@ -26,10 +33,12 @@ export function Hero({ home }: { home: Home }) {
               <span className="sr-only">Ubicación: </span>
               {profile.location}
             </li>
-            <li>
-              <span className="sr-only">Disponibilidad: </span>
-              <Text value={profile.availability} />
-            </li>
+            {profile.availability && (
+              <li>
+                <span className="sr-only">Disponibilidad: </span>
+                <Text value={profile.availability} />
+              </li>
+            )}
           </ul>
 
           <div className="mt-8 flex flex-wrap gap-3">

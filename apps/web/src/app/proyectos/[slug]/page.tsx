@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ProjectKind, ProjectLinks } from '@/components/project-card';
+import { ProjectKind, ProjectLinks, ProjectStack } from '@/components/project-card';
 import { Text } from '@/components/text';
-import { Chip, Container, Notice } from '@/components/ui';
+import { Container, Notice } from '@/components/ui';
 import { api } from '@/lib/api';
 import { formatRange } from '@/lib/format';
 import type { ProjectDetail } from '@/lib/types';
@@ -52,7 +52,7 @@ export default async function ProjectPage({ params }: Props) {
         <Link href="/proyectos">← Todos los proyectos</Link>
       </p>
       <article className="mt-6 max-w-prose">
-        <ProjectKind team={project.team} origin={project.origin} />
+        <ProjectKind team={project.team} origin={project.origin} inProgress={project.inProgress} />
         <h1 className="mt-2 text-3xl sm:text-4xl">{project.title}</h1>
         {dates && <p className="mt-2 font-mono text-label text-muted">{dates}</p>}
         <p className="mt-4 text-lg">
@@ -64,26 +64,26 @@ export default async function ProjectPage({ params }: Props) {
           </div>
         )}
 
-        <dl className="mt-8 space-y-4">
-          <div>
-            <dt className="font-medium">Mi rol</dt>
-            <dd className="text-muted">
-              <Text value={project.role} />
-            </dd>
-          </div>
-          {project.skills.length > 0 && (
-            <div>
-              <dt className="font-medium">Tecnologías</dt>
-              <dd className="mt-2">
-                <ul className="flex flex-wrap gap-2">
-                  {project.skills.map((s) => (
-                    <Chip key={s.name}>{s.name}</Chip>
-                  ))}
-                </ul>
-              </dd>
-            </div>
-          )}
-        </dl>
+        {(project.role || project.stack.length > 0) && (
+          <dl className="mt-8 space-y-4">
+            {project.role && (
+              <div>
+                <dt className="font-medium">Mi aporte</dt>
+                <dd className="text-muted">
+                  <Text value={project.role} />
+                </dd>
+              </div>
+            )}
+            {project.stack.length > 0 && (
+              <div>
+                <dt className="font-medium">Tecnologías</dt>
+                <dd>
+                  <ProjectStack stack={project.stack} className="mt-2" />
+                </dd>
+              </div>
+            )}
+          </dl>
+        )}
 
         <div className="mt-6">
           <ProjectLinks demoUrl={project.demoUrl} repoUrl={project.repoUrl} />
@@ -91,7 +91,8 @@ export default async function ProjectPage({ params }: Props) {
 
         {SECTIONS.map(({ key, title }) => {
           const value = project[key];
-          if (typeof value !== 'string' || value.length === 0) return null;
+          // Una sección sin contenido no se muestra.
+          if (typeof value !== 'string' || value.trim().length === 0) return null;
           return (
             <section key={key} className="mt-10">
               <h2 className="text-xl">{title}</h2>

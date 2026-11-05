@@ -23,7 +23,10 @@ export interface ProjectCard {
   slug: string;
   title: string;
   summary: string;
-  role: string;
+  /** Aporte propio; null si no se cargó. */
+  role: string | null;
+  inProgress: boolean;
+  stack: string[];
   team: ProjectTeam | null;
   origin: ProjectOrigin | null;
   featured: boolean;
