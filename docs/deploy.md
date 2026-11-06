@@ -39,7 +39,7 @@ Los precios de DonWeb se leyeron el 5 de noviembre de 2026 en una página con el
 | Respuesta más lenta durante esa etapa   | 2,5 s                   | 8,1 s                                         |
 | Procesos matados por falta de memoria   | 0                       | 0                                             |
 
-La prueba corrió en una PC con otro disco y otros procesadores, así que los tiempos reales pueden ser peores. Mientras se reconstruye, el sitio puede responder lento.
+La prueba corrió en una PC con otro disco y otros procesadores. **En el servidor real**, con 1950 MiB de RAM y 2 GB de swap, el primer despliegue tardó unos 3,5 minutos, con un pico de 1268 MiB de RAM y 30 MiB de swap, y sin procesos matados por falta de memoria. Una reconstrucción con el sitio andando no se midió ahí; durante una, el sitio puede responder lento.
 
 ### Disco, sobre 20 GB
 
@@ -57,6 +57,8 @@ La prueba corrió en una PC con otro disco y otros procesadores, así que los ti
 | Caché de construcción, durante una actualización  | ~5 GB      | Medido; se limpia al final |
 | Imágenes viejas, durante una actualización        | ~1,3 GB    | Se limpian al final        |
 | **Pico**                                          | **~15 GB** |                            |
+
+**Medido en el servidor real:** el disco tiene 24 GB. Antes de construir, ya con Ubuntu, Docker y el swap, usaba 5,1 GB. Durante la construcción quedaron 16 GB libres como mínimo, y al terminar y limpiar la caché, 6,5 GB usados, con el sitio recién publicado. La tabla sigue siendo la estimación para un año de uso.
 
 **Plan B, si en el servidor real falla o tarda demasiado:** construir en otro lado. Con el repo privado, GitHub Packages incluye 500 MB compartidos con los artifacts, y las imágenes ocupan más. Mientras sea privado, conviene construir en la PC y mandarlas por SSH, sin registro ni token:
 
@@ -118,9 +120,11 @@ En [DuckDNS](https://www.duckdns.org), iniciá sesión y creá el subdominio. Gu
 | Renovación                  | **No publicado**                                                                       | **Preguntar** si es automática, a qué precio y cómo se da de baja                                                                                                                                                              |
 | Precio                      | Muestra 55% de descuento                                                               | Confirmar en el carrito el total del primer mes y el de los siguientes                                                                                                                                                         |
 
+Soporte de DonWeb confirmó la salida al puerto 587, el acceso root por SSH y que el firewall del panel descarta por defecto lo que no tenga regla. Lo demás de esta tabla no quedó confirmado por soporte.
+
 ## Parte 2: después de pagar
 
-**Estos comandos todavía no se ejecutaron en un servidor real.** `setup.sh`, `ssh-cerrar.sh` y `deploy.sh` se probaron en contenedores (ver [qué está probado](#qué-está-probado)).
+Estos pasos se ejecutaron en el servidor real, salvo lo que figura en [qué está probado](#qué-está-probado). Se pueden repetir en uno nuevo.
 
 ### 5. Abrir el firewall de DonWeb
 
@@ -184,7 +188,7 @@ ssh -p <puerto> <usuario>@<ip> true && echo OK
 
 Si perdés la clave, se entra desde la "Consola VNC" del panel de DonWeb. Para deshacer el cierre, borrá `/etc/ssh/sshd_config.d/00-portfolio.conf` y corré `sudo systemctl reload ssh`.
 
-**Acceso del proveedor:** la imagen de DonWeb trae `80-step.conf`, que acepta certificados de su CA para entrar como `root`, con principales como `ssh.soporte.clouds`. `PermitRootLogin no` también bloquea esa entrada. Si soporte necesita entrar por SSH, cambiá esa línea en `00-portfolio.conf` por `PermitRootLogin prohibit-password` y recargá SSH: permite claves y certificados de root, pero no contraseñas. La imagen también deja escuchando SSH en el puerto 22, correo en el 25 y SNMP en el 161: los dos firewalls los bloquean desde afuera.
+**Acceso del proveedor:** la imagen de DonWeb trae `80-step.conf`, que acepta certificados de su CA para entrar como `root`. `PermitRootLogin no` también bloquea esa entrada. Si soporte necesita entrar por SSH, cambiá esa línea en `00-portfolio.conf` por `PermitRootLogin prohibit-password` y recargá SSH: permite claves y certificados de root, pero no contraseñas. La imagen también deja escuchando SSH en el puerto 22, correo en el 25 y SNMP en el 161: los dos firewalls los bloquean desde afuera.
 
 ### 8. Bajar el código
 
@@ -223,7 +227,26 @@ Completá los datos `SMTP_*` y `CONTACT_TO` que ya probaste. Las variables de ba
 
 ### 10. Levantar el sitio
 
-Antes, confirmá que el subdominio apunte a la IP y que el firewall esté abierto: si no, Let's Encrypt rechaza los intentos, y tiene un límite de fallos por hora.
+Antes, confirmá que el subdominio apunte a la IP y que el firewall esté abierto: si no, Let's Encrypt rechaza los intentos, y tiene un límite de fallos por hora. Para probar todo el camino sin gastar esos intentos, levantá un Caddy temporal contra el entorno de pruebas de Let's Encrypt:
+
+```bash
+# En el servidor.
+mkdir -p ~/portcheck
+cat > ~/portcheck/Caddyfile <<EOF
+{
+	acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+	admin off
+}
+<subdominio>.duckdns.org {
+	respond "portcheck ok"
+}
+EOF
+docker run -d --name portcheck -p 80:80 -p 443:443 -v "$HOME/portcheck/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2.10-alpine
+docker logs portcheck 2>&1 | grep -E 'certificate obtained successfully|"level":"error"'
+docker rm -fv portcheck && rm -rf ~/portcheck
+```
+
+Tiene que decir `certificate obtained successfully`. Si da error, resolvelo antes de desplegar.
 
 `deploy.sh` construye, levanta y limpia la caché de Docker, sin tocar los volúmenes. Usalo en vez de `up --build`:
 
@@ -247,16 +270,16 @@ Desde `https://<subdominio>.duckdns.org/admin`:
 2. **Perfil:** subí la foto. Se guarda sin metadatos.
 3. **Proyectos:** escribí "Mi aporte" de la carta digital y las secciones que falten. Una sección vacía no se muestra.
 
-Comprobá desde la PC que lo publicado sea idéntico a los `-Web`. Cada par de hashes tiene que coincidir:
+Comprobá que lo publicado sea idéntico a los `-Web`, sin descargarlo: cada descarga pública suma un evento a las métricas. Cada perfil tiene que mostrar el mismo hash que su PDF:
 
 ```bash
-for p in Backend Mainframe Soporte; do
-  sha256sum "private/cv/CV-David-Saghatelyan-$p-Web.pdf"
-  curl -fsS "https://<subdominio>.duckdns.org/cv/${p,,}" | sha256sum
-done
+# En el servidor.
+dc exec -T db psql -U portfolio -d portfolio -tAc 'SELECT p.key, f.sha256 FROM "CvProfile" p JOIN "CvVersion" v ON v.id = p."currentVersionId" JOIN "StoredFile" f ON f.id = v."fileId" ORDER BY 1'
+# En la PC.
+sha256sum private/cv/*-Web.pdf
 ```
 
-Cada descarga suma un evento a las métricas. Después, en el servidor, `dc exec api node dist/cli/content-todos.js` tiene que responder "Sin contenido pendiente".
+Si un perfil tiene otro archivo, subí el `-Web` como versión vigente. La versión anterior deja de ser pública y queda en el historial del panel. Después, en el servidor, `dc exec api node dist/cli/content-todos.js` tiene que responder "Sin contenido pendiente".
 
 ### 12. Probar el email en el servidor
 
@@ -431,20 +454,31 @@ Ver [seguridad: secretos](seguridad.md#secretos-respaldo-y-recuperación).
 - Envío real por Gmail desde la PC: el mensaje llegó, sin caer en spam.
 - El CI de GitHub, en el repo privado.
 
+### Probado en el servidor real
+
+Con Ubuntu 24.04 en DonWeb:
+
+- `setup.sh`: swap, Docker, usuario nuevo y actualizaciones, y todo sigue activo después de reiniciar. Un reinicio apagó `ufw`, porque el servicio quedaba deshabilitado. Se corrigió a mano, sobrevivió a otro reinicio, y el script ya incluye la corrección.
+- `ssh-cerrar.sh`: la clave de `<usuario>` entra; root, con o sin clave, queda rechazado, y el servidor ya no ofrece contraseña.
+- La deploy key de solo lectura y el clon superficial de `main`.
+- `preflight.sh`, sin ningún `MAL`.
+- La entrada a los puertos 80 y 443, a través de los dos firewalls. Solo los puertos 80, 443 y el de SSH responden desde afuera, entre los revisados: 22, 25, 3000, 4000 y 5432 no.
+- Let's Encrypt: primero en el entorno de pruebas, y después el certificado real, con verificación estricta desde otra red.
+- `deploy.sh`: construcción, limpieza de la caché y volúmenes intactos.
+- El seed: 5 proyectos, 0 administradores y 0 CV hasta cargarlos.
+- `admin-create` y la carga de foto y CV desde el panel.
+- Los CV vigentes: el hash del archivo guardado coincide con el de cada `-Web`, y `/cv` sirve el tamaño correcto.
+- El envío por Gmail desde el servidor, por el puerto 587: un pedido a la API del formulario, y el mensaje llegó. No se probó tipeando en el formulario en producción; ese camino lo cubren los end-to-end en local.
+- Lighthouse móvil desde una PC en Argentina, con las métricas bloqueadas: 99 a 100 en rendimiento y 100 en lo demás, en `/`, `/proyectos` y un proyecto (3 corridas).
+
 ### Sin probar
 
 - Subida, descarga y restauración real con B2: solo hace falta si se activan los backups externos.
-
-### Solo se puede probar en el servidor real
-
 - La restauración del backup de DonWeb y el contenido de esa copia.
-- El firewall del panel de DonWeb.
-- La corrección de `setup.sh` que deja `ufw` activo al arrancar: en el servidor se aplicó a mano y sobrevivió a un reinicio, pero el script corregido no volvió a correr.
-- `preflight.sh` en un servidor con acceso real a internet desde DonWeb.
-- `duckdns-update.sh` con un token real.
-- La entrada a los puertos 80 y 443, y la salida al 587 desde DonWeb.
-- La emisión real del certificado de Let's Encrypt.
-- Construir en el hardware real, con su disco y sus procesadores.
-- El espacio real que ocupa Ubuntu.
-- Los monitores externos.
-- Lighthouse con la latencia real.
+- La renovación automática del certificado.
+- HTTP/3, por el puerto UDP 443.
+- `setup.sh` corregido, de punta a punta en otro servidor.
+- `duckdns-update.sh` con un token real: el subdominio se apuntó desde la página de DuckDNS.
+- Una reconstrucción con el sitio andando en el servidor real.
+- Los monitores externos, que todavía no se crearon.
+- Lighthouse desde otras redes y regiones.
