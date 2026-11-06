@@ -30,9 +30,11 @@ COPY apps/web/package.json apps/web/
 RUN npm ci -w apps/api --include-workspace-root=false --omit=dev --ignore-scripts \
   && npm rebuild @prisma/engines \
   && npm cache clean --force \
-  && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+  && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx \
+  && rm -rf node_modules/typescript node_modules/@types node_modules/.bin/tsc node_modules/.bin/tsserver
 # npm no se usa en ejecución: sacarlo reduce lo que un atacante tendría a mano, y también las
 # vulnerabilidades de sus dependencias, que venían en la imagen base.
+# El CLI de Prisma arrastra TypeScript y tipos que nada usa al ejecutar: no llegan a producción.
 COPY --from=build /app/apps/api/dist apps/api/dist
 COPY apps/api/prisma apps/api/prisma
 COPY apps/api/prisma.config.ts apps/api/

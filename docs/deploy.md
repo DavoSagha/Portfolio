@@ -120,20 +120,20 @@ En [DuckDNS](https://www.duckdns.org), iniciá sesión y creá el subdominio. Gu
 
 ## Parte 2: después de pagar
 
-**Estos comandos todavía no se ejecutaron en un servidor real.**
+**Estos comandos todavía no se ejecutaron en un servidor real.** `setup.sh`, `ssh-cerrar.sh` y `deploy.sh` se probaron en contenedores (ver [qué está probado](#qué-está-probado)).
 
-### 5. Preparar el servidor
+### 5. Abrir el firewall de DonWeb
 
-Instalá Ubuntu desde el panel. Si te deja, elegí tu clave SSH pública. Si no tenés una, creala con `ssh-keygen -t ed25519`. Reemplazá `<puerto>` e `<ip>` por los del panel.
+El firewall del panel descarta por defecto todo lo que no tenga regla. Mantené una sesión SSH abierta mientras lo cambiás, y creá primero la regla de SSH:
 
-```bash
-# Desde la PC.
-cat ~/.ssh/id_ed25519.pub | ssh -p <puerto> root@<ip> 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys'
-scp -P <puerto> scripts/server/setup.sh root@<ip>:/root/
-ssh -p <puerto> root@<ip> 'bash /root/setup.sh'
-```
+| Orden | Protocolo | Puerto            | Origen   | Para qué                   |
+| ----- | --------- | ----------------- | -------- | -------------------------- |
+| 1     | TCP       | El SSH de tu plan | Cualquiera | Entrar al servidor       |
+| 2     | TCP       | 80                | Cualquiera | Let's Encrypt y redirección |
+| 3     | TCP       | 443               | Cualquiera | HTTPS                    |
+| 4     | UDP       | 443               | Cualquiera | HTTP/3, opcional         |
 
-Instala swap, actualizaciones automáticas, Docker y firewall, y deja SSH solo con clave. Antes de cerrar la sesión, abrí otra terminal y comprobá que entrás con `ssh -p <puerto> root@<ip>`.
+Abrí una terminal nueva y comprobá que seguís entrando antes de cerrar la anterior. Sin una IP fija, limitar el origen del SSH puede dejarte afuera; la protección es la clave del paso 7.
 
 ### 6. Apuntar el subdominio
 
@@ -143,9 +143,48 @@ Desde la PC, en la carpeta del repo. El script pide el token sin mostrarlo:
 bash scripts/duckdns-update.sh <subdominio> <ip>
 ```
 
-### 7. Bajar el código
+### 7. Preparar el servidor
 
-Con el repo privado, el servidor usa una clave de solo lectura para ese repo:
+Si no tenés una clave SSH, creala con `ssh-keygen -t ed25519`. Reemplazá `<puerto>`, `<ip>` y `<usuario>`, el nombre del usuario que se va a crear. Por ahora, root entra con su contraseña:
+
+```bash
+# Desde la PC.
+cat ~/.ssh/id_ed25519.pub | ssh -p <puerto> root@<ip> 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys'
+scp -P <puerto> scripts/server/setup.sh root@<ip>:/root/
+ssh -p <puerto> root@<ip> 'bash /root/setup.sh <usuario>'
+```
+
+Instala swap, actualizaciones automáticas, Docker y firewall, y crea el usuario con tu clave. **No cambia el acceso por SSH.**
+
+Abrí otra terminal y comprobá que entrás con la clave, y que el usuario tiene sudo y Docker:
+
+```bash
+ssh -p <puerto> <usuario>@<ip>
+sudo whoami && docker ps
+```
+
+Recién entonces, con esa sesión abierta, cerrá el acceso de root y por contraseña:
+
+```bash
+# Desde la PC.
+scp -P <puerto> scripts/server/ssh-cerrar.sh <usuario>@<ip>:
+# En el servidor, como <usuario>.
+sudo bash ssh-cerrar.sh && rm ssh-cerrar.sh
+```
+
+Comprobalo desde otra terminal. Los dos primeros tienen que ser rechazados, y el tercero tiene que entrar:
+
+```bash
+ssh -p <puerto> -o PubkeyAuthentication=no root@<ip>
+ssh -p <puerto> -o PubkeyAuthentication=no <usuario>@<ip>
+ssh -p <puerto> <usuario>@<ip> true && echo OK
+```
+
+Si perdés la clave, se entra desde la consola del panel de DonWeb. Para deshacer el cierre, borrá `/etc/ssh/sshd_config.d/00-portfolio.conf` y corré `sudo systemctl reload ssh`.
+
+### 8. Bajar el código
+
+Con el repo privado, el servidor usa una clave de solo lectura para ese repo. Desde acá, todo corre como `<usuario>`:
 
 ```bash
 # En el servidor.
@@ -153,18 +192,19 @@ ssh-keygen -t ed25519 -f ~/.ssh/portfolio_deploy -N '' -C portfolio-servidor
 cat ~/.ssh/portfolio_deploy.pub
 ```
 
-Pegá esa línea en GitHub, en **Settings → Deploy keys** del repo, sin permiso de escritura. Después:
+Pegá esa línea en GitHub, en **Settings → Deploy keys** del repo, sin permiso de escritura. Después, un clon superficial de `main`, sin el historial ni las demás ramas:
 
 ```bash
 printf 'Host github.com\n  IdentityFile ~/.ssh/portfolio_deploy\n' >> ~/.ssh/config
-git clone git@github.com:<usuario>/<repo>.git /opt/portfolio
+chmod 600 ~/.ssh/config
+git clone --depth 1 --branch main --single-branch git@github.com:<usuario-de-github>/<repo>.git /opt/portfolio
 cd /opt/portfolio
 bash scripts/server/preflight.sh <subdominio>.duckdns.org
 ```
 
 `preflight.sh` solo lee: comprueba sistema, swap, disco, DNS y la salida a Gmail y Let's Encrypt. La salida a B2 se informa, sin marcarla como problema. Si dice `MAL`, resolvelo antes de seguir.
 
-### 8. Configurar los secretos
+### 9. Configurar los secretos
 
 ```bash
 # En el servidor.
@@ -177,14 +217,17 @@ nano .env
 
 Completá los datos `SMTP_*` y `CONTACT_TO` que ya probaste. Las variables de backup quedan comentadas. Guardá también `POSTGRES_PASSWORD` en el gestor de contraseñas.
 
-### 9. Levantar el sitio
+### 10. Levantar el sitio
+
+Antes, confirmá que el subdominio apunte a la IP y que el firewall esté abierto: si no, Let's Encrypt rechaza los intentos, y tiene un límite de fallos por hora.
+
+`deploy.sh` construye, levanta y limpia la caché de Docker, sin tocar los volúmenes. Usalo en vez de `up --build`:
 
 ```bash
 # En el servidor.
 echo "alias dc='docker compose -f compose.yaml -f compose.prod.yaml'" >> ~/.bashrc && source ~/.bashrc
 cd /opt/portfolio
-dc up -d --build
-dc ps                                            # todo healthy
+bash scripts/server/deploy.sh
 curl -I https://<subdominio>.duckdns.org         # 200, con Strict-Transport-Security
 dc exec api node dist/cli/seed.js
 dc exec -it api node dist/cli/admin-create.js
@@ -192,7 +235,7 @@ dc exec -it api node dist/cli/admin-create.js
 
 No borres el volumen `caddy_data`: guarda el certificado. Let's Encrypt limita las repeticiones del mismo certificado a 5 por semana. `duckdns.org` está en la Public Suffix List, así que tu subdominio no comparte el resto de los límites con otros usuarios.
 
-### 10. Cargar los archivos y el contenido
+### 11. Cargar los archivos y el contenido
 
 Desde `https://<subdominio>.duckdns.org/admin`:
 
@@ -211,11 +254,11 @@ done
 
 Cada descarga suma un evento a las métricas. Después, en el servidor, `dc exec api node dist/cli/content-todos.js` tiene que responder "Sin contenido pendiente".
 
-### 11. Probar el email en el servidor
+### 12. Probar el email en el servidor
 
 Mandate un mensaje desde una ventana privada. En `/admin/mensajes` tiene que figurar "Enviado por email".
 
-### 12. Monitoreo
+### 13. Monitoreo
 
 En UptimeRobot, un monitor HTTP de `https://<subdominio>.duckdns.org/api/v1/health`. Esa ruta consulta también la base.
 
@@ -227,7 +270,7 @@ dc logs --tail 100 api      # los logs rotan solos: 5 archivos de 10 MB por serv
 df -h && docker system df   # espacio en disco
 ```
 
-### 13. Comprobar la recuperación y medir
+### 14. Comprobar la recuperación y medir
 
 1. Confirmá en el panel de DonWeb que ya existe una copia semanal. Si soporte acepta una [restauración de prueba](#restaurar-desde-donweb), hacela antes de cargar datos que no quieras perder.
 2. Repetí Lighthouse con el sitio publicado.
@@ -323,14 +366,13 @@ dc start api web
 shred -u age.key
 ```
 
-Comprobá el sitio, el CV, la foto y el login. **Para reconstruir en un servidor nuevo:** hacé los pasos 5 a 9 sin el seed ni `admin-create`, activá el servicio y después restaurá. Tu usuario y tu contraseña vuelven con el backup.
+Comprobá el sitio, el CV, la foto y el login. **Para reconstruir en un servidor nuevo:** hacé los pasos 5 a 10 sin el seed ni `admin-create`, activá el servicio y después restaurá. Tu usuario y tu contraseña vuelven con el backup.
 
 ## Actualizar
 
 ```bash
-cd /opt/portfolio && git pull
-dc up -d --build               # las migraciones corren solas al iniciar la API
-docker image prune -f && docker builder prune -af   # libera hasta 6 GB
+cd /opt/portfolio && git pull --ff-only
+bash scripts/server/deploy.sh   # las migraciones corren solas al iniciar la API
 ```
 
 Antes de una actualización con migraciones, creá un snapshot desde el panel de DonWeb, para poder volver atrás. Si activaste los backups externos, corré también `dc exec backup backup`.

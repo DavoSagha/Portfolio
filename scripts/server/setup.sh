@@ -2,13 +2,22 @@
 # Prepara un Ubuntu LTS recién creado. Se corre una vez, como root, por SSH.
 # Se puede repetir: cada paso comprueba si ya está hecho.
 #
-#   bash scripts/server/setup.sh
+#   bash setup.sh <usuario>
+#
+# Crea el usuario sin contraseña, con tu clave SSH. No cambia el acceso por SSH: el de root con
+# contraseña se cierra aparte, con ssh-cerrar.sh, después de comprobar que entrás con la clave.
 set -euo pipefail
 
 [ "$(id -u)" = 0 ] || { echo "Correlo como root." >&2; exit 1; }
+[ "$#" -eq 1 ] || { echo "Uso: $0 <usuario>" >&2; exit 2; }
+NEW_USER="$1"
+[[ "$NEW_USER" =~ ^[a-z][a-z0-9-]{0,30}$ ]] && [ "$NEW_USER" != root ] \
+  || { echo "Usuario inválido: $NEW_USER" >&2; exit 2; }
 # shellcheck disable=SC1091
 . /etc/os-release
 [ "${ID:-}" = ubuntu ] || { echo "Este script es para Ubuntu; encontré: ${ID:-desconocido}." >&2; exit 1; }
+[ -s /root/.ssh/authorized_keys ] \
+  || { echo "No hay claves en /root/.ssh/authorized_keys: el usuario nuevo no podría entrar." >&2; exit 1; }
 
 # El puerto real de esta conexión: si el proveedor no usa el 22, el firewall no te deja afuera.
 SSH_PORT="${SSH_CONNECTION:+$(echo "$SSH_CONNECTION" | awk '{print $4}')}"
@@ -29,7 +38,8 @@ echo "== Actualizaciones de seguridad automáticas"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
 apt-get upgrade -y -qq
-apt-get install -y -qq unattended-upgrades ufw git curl openssl > /dev/null
+# Una instalación mínima puede no traer sudo ni ss.
+apt-get install -y -qq unattended-upgrades ufw git curl openssl sudo iproute2 ca-certificates nano > /dev/null
 dpkg-reconfigure -f noninteractive unattended-upgrades
 
 echo "== Límite de los logs del sistema"
@@ -50,16 +60,21 @@ ufw allow 443/tcp > /dev/null
 ufw allow 443/udp > /dev/null
 ufw --force enable > /dev/null
 
-echo "== SSH solo con clave"
-if [ -s /root/.ssh/authorized_keys ]; then
-  # 00- gana a los archivos que agrega el proveedor, porque sshd se queda con el primer valor.
-  printf 'PasswordAuthentication no\nPermitRootLogin prohibit-password\n' > /etc/ssh/sshd_config.d/00-portfolio.conf
-  sshd -t
-  systemctl reload ssh
-  echo "Listo. NO cierres esta sesión: abrí otra y comprobá que entrás con tu clave."
-else
-  echo "AVISO: no hay claves en /root/.ssh/authorized_keys y dejé la contraseña activa para no dejarte afuera."
-fi
+echo "== Usuario $NEW_USER, con tu clave SSH"
+id "$NEW_USER" > /dev/null 2>&1 || adduser --disabled-password --gecos '' "$NEW_USER" > /dev/null
+usermod -aG sudo,docker "$NEW_USER"
+home_dir="$(getent passwd "$NEW_USER" | cut -d: -f6)"
+install -d -m 700 -o "$NEW_USER" -g "$NEW_USER" "$home_dir/.ssh"
+install -m 600 -o "$NEW_USER" -g "$NEW_USER" /root/.ssh/authorized_keys "$home_dir/.ssh/authorized_keys"
+# No tiene contraseña que pedirle. El grupo docker ya equivale a root: esto no agrega poder.
+sudoers="/etc/sudoers.d/90-portfolio"
+printf '%s ALL=(ALL) NOPASSWD:ALL\n' "$NEW_USER" > "$sudoers.tmp"
+chmod 440 "$sudoers.tmp"
+visudo -cqf "$sudoers.tmp"
+mv "$sudoers.tmp" "$sudoers"
+install -d -o "$NEW_USER" -g "$NEW_USER" /opt/portfolio
 
 echo
-echo "Servidor preparado. Seguí con: bash scripts/server/preflight.sh <tu-subdominio>.duckdns.org"
+echo "Servidor preparado. El acceso por SSH no cambió."
+echo "NO cierres esta sesión: abrí otra terminal y comprobá que entrás con:"
+echo "  ssh -p $SSH_PORT $NEW_USER@<ip>"
