@@ -387,3 +387,10 @@ Verificadas con `npm view` (2026-11) y fijadas exactas (`save-exact`), con el lo
 - **Alternativas:** construir en GitHub Actions y publicar en un registro, que en un repo privado choca con los 500 MB incluidos; un dominio propio desde el principio.
 - **Motivo:** la simulación con 2 GB y swap construyó y reconstruyó sin errores ni procesos matados por falta de memoria, y el pico de disco entra en 20 GB ([medición](deploy.md#entra-en-el-servidor)). El subdominio permite publicar sin costo, y cambiar a un dominio propio solo requiere DNS y dos variables.
 - **Limitación:** la simulación no reemplaza al hardware real. Si la construcción falla ahí, el plan B es construir en la PC.
+
+## D-041. Backups externos opcionales
+
+- **Decisión:** en producción, el servicio de [D-037](#d-037-backups-cifrados-con-clave-pública) queda apagado con el perfil `backups` de Compose. Por ahora, la recuperación depende del backup estándar de DonWeb. El código, sus pruebas y los pasos para activarlo se conservan.
+- **Alternativas:** activar ahora Backblaze B2; guardar copias cifradas solo en el mismo servidor; contratar un backup Premium de DonWeb, con más copias y restauración desde el panel.
+- **Motivo:** decisión del autor, para publicar sin configurar otra cuenta ni custodiar otra clave. Un perfil evita tanto el contenedor como el cron, y el sitio no depende de ninguno de los dos. Si se activa sin clave pública, el servicio no arranca: nunca genera un backup sin cifrar.
+- **Limitación:** el backup estándar es semanal, conserva solo la última copia, se restaura por ticket y abarca todo el servidor. Se pueden perder hasta 7 días de mensajes y cambios, y un error que se note tarde ya puede estar en la única copia. DonWeb no publica si la copia es consistente con una base en uso, ni qué pasa al dar de baja el servicio. La restauración no se probó.

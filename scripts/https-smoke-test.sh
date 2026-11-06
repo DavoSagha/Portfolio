@@ -23,8 +23,6 @@ cleanup() {
 }
 trap cleanup EXIT
 
-docker build -q -f docker/backup/Dockerfile -t portfolio-backup-tools . > /dev/null
-RECIPIENT="$(docker run --rm --entrypoint age-keygen portfolio-backup-tools 2> /dev/null | grep -o 'age1[a-z0-9]*' | head -1)"
 cat > "$ENV_FILE" <<EOF
 POSTGRES_USER=portfolio
 POSTGRES_PASSWORD=$(openssl rand -hex 24)
@@ -33,7 +31,6 @@ SITE_URL=https://localhost:$HTTPS
 SITE_ADDRESS=localhost
 HTTP_PORT=$HTTP
 HTTPS_PORT=$HTTPS
-BACKUP_AGE_RECIPIENT=$RECIPIENT
 EOF
 
 compose up -d --build --wait > /dev/null 2>&1
@@ -68,5 +65,9 @@ echo "OK: versión de HTTP negociada: $alpn"
 published="$(compose ps --format '{{.Service}} {{.Publishers}}' | grep -v '^caddy' | grep -E '0\.0\.0\.0|127\.0\.0\.1' || true)"
 [ -z "$published" ] || fail "hay servicios internos con puertos publicados: $published"
 echo "OK: solo Caddy publica puertos"
+
+# La configuración por defecto, sin variables de backup: el sitio anda y el servicio no existe.
+if compose ps -a --format '{{.Service}}' | grep -qx backup; then fail "el servicio de backups arrancó sin activarlo"; fi
+echo "OK: los backups externos quedan apagados por defecto"
 
 printf '\nOK: prueba de HTTPS completa.\n'

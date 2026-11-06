@@ -54,7 +54,8 @@ done
 
 reach smtp.gmail.com 587 && ok "Salida al puerto 587 de Gmail" \
   || bad "No hay salida al puerto 587 de Gmail: el proveedor puede estar bloqueándolo"
-reach api.backblazeb2.com 443 && ok "Salida a Backblaze B2" || bad "No hay salida a Backblaze B2"
+reach api.backblazeb2.com 443 && ok "Salida a Backblaze B2" \
+  || info "Sin salida a Backblaze B2: solo importa si activás los backups externos"
 reach acme-v02.api.letsencrypt.org 443 && ok "Salida a Let's Encrypt" || bad "No hay salida a Let's Encrypt"
 
 echo

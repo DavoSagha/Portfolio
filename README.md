@@ -132,7 +132,7 @@ Con `compose.prod.yaml`:
 - la API no arranca con la contraseña de ejemplo o con `SITE_URL` sin https;
 - el seed no corre solo;
 - Caddy obtiene el certificado TLS para `SITE_ADDRESS`;
-- un servicio hace backups cifrados cada día.
+- los backups cifrados diarios son opcionales: se activan con `COMPOSE_PROFILES=backups` ([cómo](docs/deploy.md#activar-los-backups-externos)).
 
 ```sh
 npm run test:restore            # backup y restauración de punta a punta, en un stack aislado

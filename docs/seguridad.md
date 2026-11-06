@@ -83,17 +83,17 @@ Cliente ──► Caddy (único puerto expuesto) ──► API (red interna de D
 
 ## Secretos: respaldo y recuperación
 
-| Secreto                | Dónde vive                                        | Si se pierde                            | Si se filtra                                                                                                             |
-| ---------------------- | ------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `POSTGRES_PASSWORD`    | `.env` del servidor y gestor de contraseñas       | Se puede cambiar con acceso al servidor | Cambiarla en la base y en el `.env`. La base no publica puertos.                                                         |
-| Clave privada de `age` | **Solo** en el gestor de contraseñas              | **Los backups no se pueden recuperar**  | Generar otra clave y cambiar `BACKUP_AGE_RECIPIENT`. Los backups viejos quedan expuestos: borrarlos del destino externo. |
-| `SMTP_PASS`            | `.env` del servidor y gestor de contraseñas       | Crear otra contraseña de aplicación     | Revocarla en la cuenta de Google y crear otra.                                                                           |
-| `rclone.conf`          | Servidor (permisos `600`) y gestor de contraseñas | Crear otra clave en el proveedor        | Revocarla en el proveedor. Los backups siguen cifrados.                                                                  |
-| Token de DuckDNS       | Gestor de contraseñas                             | Se ve en la cuenta de DuckDNS           | Regenerarlo en DuckDNS. Permite cambiar la IP del subdominio.                                                            |
-| Contraseña del panel   | Gestor de contraseñas. En la base, solo su hash   | `admin:password` desde el servidor      | `admin:password`, que además revoca todas las sesiones.                                                                  |
+| Secreto                                                     | Dónde vive                                        | Si se pierde                            | Si se filtra                                                                                                             |
+| ----------------------------------------------------------- | ------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `POSTGRES_PASSWORD`                                         | `.env` del servidor y gestor de contraseñas       | Se puede cambiar con acceso al servidor | Cambiarla en la base y en el `.env`. La base no publica puertos.                                                         |
+| Clave privada de `age` (si se activan los backups externos) | **Solo** en el gestor de contraseñas              | **Los backups no se pueden recuperar**  | Generar otra clave y cambiar `BACKUP_AGE_RECIPIENT`. Los backups viejos quedan expuestos: borrarlos del destino externo. |
+| `SMTP_PASS`                                                 | `.env` del servidor y gestor de contraseñas       | Crear otra contraseña de aplicación     | Revocarla en la cuenta de Google y crear otra.                                                                           |
+| `rclone.conf` (si se activan los backups externos)          | Servidor (permisos `600`) y gestor de contraseñas | Crear otra clave en el proveedor        | Revocarla en el proveedor. Los backups siguen cifrados.                                                                  |
+| Token de DuckDNS                                            | Gestor de contraseñas                             | Se ve en la cuenta de DuckDNS           | Regenerarlo en DuckDNS. Permite cambiar la IP del subdominio.                                                            |
+| Contraseña del panel                                        | Gestor de contraseñas. En la base, solo su hash   | `admin:password` desde el servidor      | `admin:password`, que además revoca todas las sesiones.                                                                  |
 
 - **Rotación:** cambiar el valor en el `.env` y aplicar con `docker compose up -d`.
-- **Recuperación total:** con el gestor de contraseñas y el backup externo alcanza para reconstruir el servidor desde cero ([procedimiento](deploy.md#restaurar-un-backup)). Se probó en local borrando todos los volúmenes.
+- **Recuperación:** hoy depende del [backup semanal de DonWeb](deploy.md#backups), que no está cifrado con una clave propia, guarda todo el disco (incluido el `.env`) y no se probó. Con los backups externos activados, el gestor de contraseñas y una copia alcanzan para reconstruir el servidor desde cero ([procedimiento](deploy.md#restaurar-un-backup-externo)), algo probado en local borrando todos los volúmenes. Ver [D-041](decisiones.md#d-041-backups-externos-opcionales).
 
 ## Revisión de seguridad (Fase 5)
 

@@ -55,6 +55,12 @@ docker run --rm --entrypoint age-keygen portfolio-backup-tools > "$WORK/age.key"
 RECIPIENT="$(grep -o 'age1[a-z0-9]*' "$WORK/age.key" | head -1)"
 docker run --rm --entrypoint age-keygen portfolio-backup-tools > "$WORK/other.key" 2> /dev/null
 
+step "Sin clave pública, el servicio de backups no arranca"
+if timeout 30 docker run --rm -e BACKUP_AGE_RECIPIENT= portfolio-backup-tools > "$WORK/nokey.log" 2>&1; then
+  fail "arrancó sin clave pública"
+fi
+grep -q 'Falta BACKUP_AGE_RECIPIENT' "$WORK/nokey.log" || fail "el error no nombra la variable"
+
 cat > "$ENV_FILE" <<EOF
 POSTGRES_USER=portfolio
 POSTGRES_PASSWORD=$(openssl rand -hex 24)
@@ -63,6 +69,7 @@ SITE_URL=https://portfolio.example.test
 SITE_ADDRESS=:80
 HTTP_PORT=$PORT
 HTTPS_PORT=8453
+COMPOSE_PROFILES=backups
 BACKUP_AGE_RECIPIENT=$RECIPIENT
 BACKUP_RCLONE_REMOTE=/offsite
 BACKUP_CRON=* * * * *

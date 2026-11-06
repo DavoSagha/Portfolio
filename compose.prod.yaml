@@ -40,7 +40,9 @@ services:
       # HTTP/3
       - '${HTTPS_PORT:-443}:443/udp'
 
+  # Apagado por defecto: se activa con COMPOSE_PROFILES=backups (ver docs/deploy.md).
   backup:
+    profiles: [backups]
     build:
       context: .
       dockerfile: docker/backup/Dockerfile
@@ -52,7 +54,8 @@ services:
       PGPASSWORD: ${POSTGRES_PASSWORD:?Falta en el .env}
       PGDATABASE: ${POSTGRES_DB:?Falta en el .env}
       # Solo la clave pública vive en el servidor: quien lo comprometa no puede leer los backups.
-      BACKUP_AGE_RECIPIENT: ${BACKUP_AGE_RECIPIENT:?Falta en el .env}
+      # Si falta, el servicio no arranca (entrypoint.sh): nunca genera un backup sin cifrar.
+      BACKUP_AGE_RECIPIENT: ${BACKUP_AGE_RECIPIENT:-}
       BACKUP_CRON: ${BACKUP_CRON:-0 6 * * *}
       BACKUP_KEEP_LOCAL: ${BACKUP_KEEP_LOCAL:-14}
       BACKUP_KEEP_REMOTE_DAYS: ${BACKUP_KEEP_REMOTE_DAYS:-90}

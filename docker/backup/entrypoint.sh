@@ -7,6 +7,8 @@ if [ "$#" -gt 0 ]; then
   exec "$@"
 fi
 
+: "${BACKUP_AGE_RECIPIENT:?Falta BACKUP_AGE_RECIPIENT: sin clave pública no se puede cifrar}"
+
 schedule="${BACKUP_CRON:-0 6 * * *}"
 # crond no hereda el entorno: el script lo carga desde este archivo, solo legible por root.
 umask 077
