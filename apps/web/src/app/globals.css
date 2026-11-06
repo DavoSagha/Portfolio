@@ -117,6 +117,22 @@
     @apply rounded-sm border border-dashed border-danger px-1 font-mono text-danger;
     font-size: 0.875em;
   }
+
+  /* Despliegue de una skill: la altura crece de a poco. Sin soporte, abre igual, sin animación. */
+  .skill-row::details-content {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition:
+      grid-template-rows 200ms ease,
+      content-visibility 200ms allow-discrete;
+  }
+  .skill-row[open]::details-content {
+    grid-template-rows: 1fr;
+  }
+  .skill-row-panel {
+    min-height: 0;
+    overflow: hidden;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -126,5 +142,9 @@
     transition-duration: 0s !important;
     animation-duration: 0s !important;
     scroll-behavior: auto !important;
+  }
+  /* Regla aparte: un navegador que no conoce este selector descartaría toda la lista. */
+  .skill-row::details-content {
+    transition-duration: 0s !important;
   }
 }
