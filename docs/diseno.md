@@ -112,7 +112,7 @@ Mobile first. Cada sección se renderiza solo si `sections.<nombre>` es verdader
    - El aviso (`disclaimer`) destacado cuando corresponde.
 3. **Detalle de proyecto** (`/proyectos/:slug`): contexto, problema, solución, arquitectura, decisiones, dificultades, aprendizajes y limitaciones.
 4. **Trayectoria.** Línea de tiempo vertical con fechas en mono. El tipo (experiencia, educación o certificación) se marca con una etiqueta de texto, no solo con color.
-5. **Skills.** Agrupadas por categoría. El nivel va en texto ("sólido", "intermedio", "básico"), sin barras ni porcentajes. Cada skill enlaza a los proyectos donde se usó.
+5. **Skills.** Una tarjeta por categoría, con una fila por skill, ordenadas de Sólido a Básico. El nivel va en una etiqueta de texto, sin barras ni porcentajes: Sólido con acento lleno, Intermedio con borde de acento y Básico con borde neutro. Los proyectos donde se usó cada skill se despliegan desde su fila ([D-039](decisiones.md#d-039-skills-en-tarjetas-y-ruta-de-navegación)).
 6. **Idiomas.** Lista simple con el nivel MCER.
 7. **Contacto.** Formulario con etiquetas visibles, errores asociados con `aria-describedby` y un honeypot oculto para lectores de pantalla (`aria-hidden`, `tabindex="-1"`). El email se muestra solo si está habilitado desde el panel.
 
