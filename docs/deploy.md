@@ -163,6 +163,8 @@ ssh -p <puerto> <usuario>@<ip>
 sudo whoami && docker ps
 ```
 
+Si existe `/var/run/reboot-required`, reiniciá con `sudo reboot`. Reiniciá de todos modos una vez: comprueba que todo arranca solo. Al volver, tienen que seguir activos el swap (`swapon --show`), el firewall (`sudo ufw status`) y Docker (`systemctl is-active docker`).
+
 Recién entonces, con esa sesión abierta, cerrá el acceso de root y por contraseña:
 
 ```bash
@@ -180,7 +182,9 @@ ssh -p <puerto> -o PubkeyAuthentication=no <usuario>@<ip>
 ssh -p <puerto> <usuario>@<ip> true && echo OK
 ```
 
-Si perdés la clave, se entra desde la consola del panel de DonWeb. Para deshacer el cierre, borrá `/etc/ssh/sshd_config.d/00-portfolio.conf` y corré `sudo systemctl reload ssh`.
+Si perdés la clave, se entra desde la "Consola VNC" del panel de DonWeb. Para deshacer el cierre, borrá `/etc/ssh/sshd_config.d/00-portfolio.conf` y corré `sudo systemctl reload ssh`.
+
+**Acceso del proveedor:** la imagen de DonWeb trae `80-step.conf`, que acepta certificados de su CA para entrar como `root`, con principales como `ssh.soporte.clouds`. `PermitRootLogin no` también bloquea esa entrada. Si soporte necesita entrar por SSH, cambiá esa línea en `00-portfolio.conf` por `PermitRootLogin prohibit-password` y recargá SSH: permite claves y certificados de root, pero no contraseñas. La imagen también deja escuchando SSH en el puerto 22, correo en el 25 y SNMP en el 161: los dos firewalls los bloquean desde afuera.
 
 ### 8. Bajar el código
 
@@ -435,7 +439,7 @@ Ver [seguridad: secretos](seguridad.md#secretos-respaldo-y-recuperación).
 
 - La restauración del backup de DonWeb y el contenido de esa copia.
 - El firewall del panel de DonWeb.
-- En `setup.sh`: swap, `ufw`, `systemd` y la instalación de Docker, que en la prueba fueron simulados.
+- La corrección de `setup.sh` que deja `ufw` activo al arrancar: en el servidor se aplicó a mano y sobrevivió a un reinicio, pero el script corregido no volvió a correr.
 - `preflight.sh` en un servidor con acceso real a internet desde DonWeb.
 - `duckdns-update.sh` con un token real.
 - La entrada a los puertos 80 y 443, y la salida al 587 desde DonWeb.

@@ -59,6 +59,8 @@ ufw allow 80/tcp > /dev/null
 ufw allow 443/tcp > /dev/null
 ufw allow 443/udp > /dev/null
 ufw --force enable > /dev/null
+# Sin esto, en algunas imágenes el firewall se apaga en el primer reinicio.
+systemctl enable --now ufw > /dev/null 2>&1
 
 echo "== Usuario $NEW_USER, con tu clave SSH"
 id "$NEW_USER" > /dev/null 2>&1 || adduser --disabled-password --gecos '' "$NEW_USER" > /dev/null
