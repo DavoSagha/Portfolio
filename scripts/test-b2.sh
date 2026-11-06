@@ -37,8 +37,8 @@ EOF
   exit 2
 fi
 
-# shellcheck disable=SC1090
-. "$B2_ENV"
+# Sin los finales de línea de Windows, que quedarían pegados al valor.
+BACKUP_RCLONE_REMOTE="$(tr -d '' < "$B2_ENV" | sed -n 's/^BACKUP_RCLONE_REMOTE=//p')"
 case "${BACKUP_RCLONE_REMOTE:-}" in
   *:?* | /?*) ;;
   *)
@@ -53,10 +53,10 @@ BASE="http://localhost:$PORT"
 WORK="$(mktemp -d)"
 if command -v cygpath > /dev/null; then
   WORK="$(cygpath -m "$WORK")"
-  RCLONE_FILE="$(cygpath -m "$RCLONE_FILE")"
   KEY="$(cygpath -m "$KEY")"
 fi
 ENV_FILE="$WORK/env"
+tr -d '' < "$RCLONE_FILE" > "$WORK/rclone.conf"
 OVERRIDE=()
 [ -n "${TEST_COMPOSE_OVERRIDE:-}" ] && OVERRIDE=(-f "$TEST_COMPOSE_OVERRIDE")
 
@@ -100,7 +100,7 @@ HTTP_PORT=$PORT
 HTTPS_PORT=8498
 BACKUP_AGE_RECIPIENT=$(cat "$PUB")
 BACKUP_RCLONE_REMOTE=$BACKUP_RCLONE_REMOTE
-RCLONE_CONF=$RCLONE_FILE
+RCLONE_CONF=$WORK/rclone.conf
 EOF
 
 step "Levantando un stack aislado con datos de prueba"

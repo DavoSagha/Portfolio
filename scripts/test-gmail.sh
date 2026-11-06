@@ -42,7 +42,8 @@ cleanup() {
 }
 trap cleanup EXIT
 
-cat "$SECRETS" > "$ENV_FILE"
+# Sin los finales de línea de Windows, que quedarían pegados a cada valor.
+tr -d '' < "$SECRETS" > "$ENV_FILE"
 cat >> "$ENV_FILE" <<EOF
 
 APP_ENV=${TEST_APP_ENV:-production}
