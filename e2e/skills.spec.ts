@@ -139,12 +139,16 @@ for (const { name, viewport, maxColumns } of SIZES) {
 
       await summary.focus();
       await page.keyboard.press('Tab');
-      // Cerrado, el link no recibe el foco.
-      expect(await row.evaluate((details) => details.contains(document.activeElement))).toBe(false);
+      // Cerrado, el link no recibe el foco: sale de la fila y sigue de largo.
+      await expect
+        .poll(() => row.evaluate((details) => details.contains(document.activeElement)))
+        .toBe(false);
 
       await summary.focus();
       await page.keyboard.press('Enter');
       await expect(row).toHaveAttribute('open', '');
+      // `open` aparece antes de que el contenido sea alcanzable: un Tab inmediato podría saltearlo.
+      await expect(link).toBeVisible();
       await page.keyboard.press('Tab');
       await expect(link).toBeFocused();
 
