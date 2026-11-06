@@ -369,3 +369,14 @@ Verificadas con `npm view` (2026-11) y fijadas exactas (`save-exact`), con el lo
 
 - **Decisión:** las imágenes de ejecución eliminan `npm` y `npx`. La API aplica las migraciones llamando directamente a la CLI de Prisma.
 - **Motivo:** no se usan en ejecución. Quitarlos eliminó todas las vulnerabilidades de severidad alta con parche que encontró `trivy`, y deja menos herramientas a mano si alguien entra al contenedor.
+
+## D-039. Skills en tarjetas y ruta de navegación
+
+- **Decisión:**
+  - El detalle de un proyecto muestra la ruta `Inicio / Proyectos / proyecto`, con `aria-current="page"` en la página actual, en lugar del link a la lista.
+  - Cada categoría de skills es una tarjeta, con una fila por skill y el nivel en una etiqueta de ancho fijo. Se ordena por nivel y, dentro de cada nivel, por el orden del panel.
+  - Los proyectos de una skill se despliegan con `<details>`, animado con `::details-content`.
+  - En escritorio, las categorías se reparten en tres columnas fijas, calculadas en el servidor sin alterar su orden. Si una columna es más baja, sus filas reparten el espacio sobrante, y todas terminan a la misma altura.
+- **Alternativas:** un botón con `aria-expanded` en un componente de cliente, que suma JavaScript a cada fila para lo que el navegador ya resuelve; columnas de CSS, que al desplegar una fila pueden mover tarjetas a otra columna; una grilla común, que deja huecos entre filas de tarjetas de distinto alto.
+- **Motivo:** `<details>` funciona con teclado y lector de pantalla, y también sin JavaScript. Las columnas fijas evitan huecos grandes y saltos al desplegar.
+- **Limitación:** un navegador sin `::details-content` despliega sin animación.
