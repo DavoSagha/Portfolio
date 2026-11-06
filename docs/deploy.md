@@ -126,12 +126,12 @@ En [DuckDNS](https://www.duckdns.org), iniciá sesión y creá el subdominio. Gu
 
 El firewall del panel descarta por defecto todo lo que no tenga regla. Mantené una sesión SSH abierta mientras lo cambiás, y creá primero la regla de SSH:
 
-| Orden | Protocolo | Puerto            | Origen   | Para qué                   |
-| ----- | --------- | ----------------- | -------- | -------------------------- |
-| 1     | TCP       | El SSH de tu plan | Cualquiera | Entrar al servidor       |
+| Orden | Protocolo | Puerto            | Origen     | Para qué                    |
+| ----- | --------- | ----------------- | ---------- | --------------------------- |
+| 1     | TCP       | El SSH de tu plan | Cualquiera | Entrar al servidor          |
 | 2     | TCP       | 80                | Cualquiera | Let's Encrypt y redirección |
-| 3     | TCP       | 443               | Cualquiera | HTTPS                    |
-| 4     | UDP       | 443               | Cualquiera | HTTP/3, opcional         |
+| 3     | TCP       | 443               | Cualquiera | HTTPS                       |
+| 4     | UDP       | 443               | Cualquiera | HTTP/3, opcional            |
 
 Abrí una terminal nueva y comprobá que seguís entrando antes de cerrar la anterior. Sin una IP fija, limitar el origen del SSH puede dejarte afuera; la protección es la clave del paso 7.
 
@@ -405,20 +405,22 @@ Ver [seguridad: secretos](seguridad.md#secretos-respaldo-y-recuperación).
 
 ### Probado en local
 
-| Qué                                                                                                                       | Cómo                          |
-| ------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| Construir, levantar, recibir carga y reconstruir con 2 GB simulados y swap                                                | `scripts/vps-sim.sh`          |
-| Backup automático por cron, cifrado, y restauración completa tras borrar todos los volúmenes, comparando datos y archivos | `npm run test:restore`        |
-| Clave incorrecta, archivo dañado y respuesta `NO`: no se cambia nada                                                      | `npm run test:restore`        |
-| La API rechaza la contraseña de ejemplo, y el seed no corre solo                                                          | `npm run test:restore`        |
-| HTTPS con la CA interna de Caddy, redirección desde HTTP, HSTS, CSP, y solo Caddy publica puertos                         | `scripts/https-smoke-test.sh` |
-| Lighthouse móvil: 97 a 100 en las cuatro categorías, en `/`, `/proyectos` y un proyecto (3 corridas)                      | Lighthouse 13.6.0             |
-| Generar la clave: par verificado, no pisa una existente ni se crea dentro del repo                                        | `backup-key-generate.sh`      |
-| Lógica de la prueba de Gmail, con un servidor SMTP de prueba; en producción rechaza un servidor sin TLS                   | `test-gmail.sh`               |
-| Lógica de la prueba de B2, con una carpeta como destino, también con archivos editados en Windows                         | `test-b2.sh`                  |
-| La configuración con un subdominio de DuckDNS y la redirección al cambiar de dominio                                      | `caddy validate`              |
-| Sin variables de backup: el sitio anda con HTTPS y el servicio no existe                                                  | `scripts/https-smoke-test.sh` |
-| Con el servicio activado y sin clave pública: no arranca                                                                  | `npm run test:restore`        |
+| Qué                                                                                                                       | Cómo                                                  |
+| ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Construir, levantar, recibir carga y reconstruir con 2 GB simulados y swap                                                | `scripts/vps-sim.sh`                                  |
+| Backup automático por cron, cifrado, y restauración completa tras borrar todos los volúmenes, comparando datos y archivos | `npm run test:restore`                                |
+| Clave incorrecta, archivo dañado y respuesta `NO`: no se cambia nada                                                      | `npm run test:restore`                                |
+| La API rechaza la contraseña de ejemplo, y el seed no corre solo                                                          | `npm run test:restore`                                |
+| HTTPS con la CA interna de Caddy, redirección desde HTTP, HSTS, CSP, y solo Caddy publica puertos                         | `scripts/https-smoke-test.sh`                         |
+| Lighthouse móvil: 97 a 100 en las cuatro categorías, en `/`, `/proyectos` y un proyecto (3 corridas)                      | Lighthouse 13.6.0                                     |
+| Generar la clave: par verificado, no pisa una existente ni se crea dentro del repo                                        | `backup-key-generate.sh`                              |
+| Lógica de la prueba de Gmail, con un servidor SMTP de prueba; en producción rechaza un servidor sin TLS                   | `test-gmail.sh`                                       |
+| Lógica de la prueba de B2, con una carpeta como destino, también con archivos editados en Windows                         | `test-b2.sh`                                          |
+| La configuración con un subdominio de DuckDNS y la redirección al cambiar de dominio                                      | `caddy validate`                                      |
+| Sin variables de backup: el sitio anda con HTTPS y el servicio no existe                                                  | `scripts/https-smoke-test.sh`                         |
+| Con el servicio activado y sin clave pública: no arranca                                                                  | `npm run test:restore`                                |
+| Clon superficial, dos despliegues con un `git pull` entre medio: caché en 0 B y un dato testigo intacto                   | `deploy.sh`, en Docker aislado                        |
+| Usuario nuevo con clave; root con contraseña solo se rechaza tras el cierre, contra un `sshd` real                        | `setup.sh` y `ssh-cerrar.sh`, en un contenedor Ubuntu |
 
 ### Probado con cuentas reales
 
@@ -432,8 +434,8 @@ Ver [seguridad: secretos](seguridad.md#secretos-respaldo-y-recuperación).
 ### Solo se puede probar en el servidor real
 
 - La restauración del backup de DonWeb y el contenido de esa copia.
-
-- `setup.sh`: solo pasó análisis estático.
+- El firewall del panel de DonWeb.
+- En `setup.sh`: swap, `ufw`, `systemd` y la instalación de Docker, que en la prueba fueron simulados.
 - `preflight.sh` en un servidor con acceso real a internet desde DonWeb.
 - `duckdns-update.sh` con un token real.
 - La entrada a los puertos 80 y 443, y la salida al 587 desde DonWeb.

@@ -394,3 +394,10 @@ Verificadas con `npm view` (2026-11) y fijadas exactas (`save-exact`), con el lo
 - **Alternativas:** activar ahora Backblaze B2; guardar copias cifradas solo en el mismo servidor; contratar un backup Premium de DonWeb, con más copias y restauración desde el panel.
 - **Motivo:** decisión del autor, para publicar sin configurar otra cuenta ni custodiar otra clave. Un perfil evita tanto el contenedor como el cron, y el sitio no depende de ninguno de los dos. Si se activa sin clave pública, el servicio no arranca: nunca genera un backup sin cifrar.
 - **Limitación:** el backup estándar es semanal, conserva solo la última copia, se restaura por ticket y abarca todo el servidor. Se pueden perder hasta 7 días de mensajes y cambios, y un error que se note tarde ya puede estar en la única copia. DonWeb no publica si la copia es consistente con una base en uso, ni qué pasa al dar de baja el servicio. La restauración no se probó.
+
+## D-042. Usuario sin root y cierre de SSH en dos pasos
+
+- **Decisión:** `setup.sh` crea un usuario con la clave de root y no cambia SSH. `ssh-cerrar.sh`, que se niega a correr como root directo, deshabilita contraseñas y la entrada de root. El servidor clona solo `main`, en superficial, y despliega con `deploy.sh`, que limpia la caché de Docker después de cada build.
+- **Alternativas:** cerrar el acceso en la misma corrida de `setup.sh`, como antes; trabajar siempre como root; sudo con contraseña.
+- **Motivo:** se comprueba que la clave entra antes de cerrar la puerta anterior. La caché llega a unos 5 GB sobre un disco de 20.
+- **Limitación:** el usuario tiene sudo sin contraseña y está en el grupo `docker`, que ya equivale a root. La separación evita errores y exige una clave, pero no aísla a ese usuario de root.
