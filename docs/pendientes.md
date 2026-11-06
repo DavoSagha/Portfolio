@@ -27,14 +27,16 @@ El perfil, las skills, los proyectos, la trayectoria y los CV están completos y
 Destacados en el inicio, en este orden: appFut, Carta digital para La Catedral del Pisco y Formación mainframe. Ningún proyecto tiene demo por ahora; se cargan desde el panel.
 
 - [ ] Aporte propio en la carta digital: no se muestra hasta confirmarlo.
-- [ ] Secciones del detalle de appFut y de la carta digital: borradores pendientes de aprobación.
+- [x] Secciones del detalle de appFut y de la carta digital verificadas contra el código de cada repo.
+- [ ] Secciones que se escriben desde el panel, ocultas hasta completarlas: en appFut, "Aprendizajes" y "Limitaciones"; en la carta digital, "Problema", "Dificultades" y "Aprendizajes".
 - [ ] Aviso de no afiliación también en la demo de la carta digital (repositorio aparte).
 - [ ] Imágenes de los proyectos, con texto alternativo.
 - [ ] Este portfolio como proyecto, cuando esté publicado.
 
 ## Infraestructura (Fase 5)
 
-- [ ] Contratar el VPS, el dominio y el destino externo de los backups. Propuesta y pasos en [deploy](deploy.md).
+- [x] Elegir servidor y dominio: DonWeb y DuckDNS ([D-040](decisiones.md#d-040-donweb-y-duckdns)).
+- [ ] Pruebas previas y contratación, en el orden de [deploy](deploy.md).
 - [ ] Cuenta de Gmail y contraseña de aplicación para el SMTP (Fase 4). Nunca se versionan.
 
 ## Técnicos

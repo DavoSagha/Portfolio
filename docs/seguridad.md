@@ -89,6 +89,7 @@ Cliente ──► Caddy (único puerto expuesto) ──► API (red interna de D
 | Clave privada de `age` | **Solo** en el gestor de contraseñas              | **Los backups no se pueden recuperar**  | Generar otra clave y cambiar `BACKUP_AGE_RECIPIENT`. Los backups viejos quedan expuestos: borrarlos del destino externo. |
 | `SMTP_PASS`            | `.env` del servidor y gestor de contraseñas       | Crear otra contraseña de aplicación     | Revocarla en la cuenta de Google y crear otra.                                                                           |
 | `rclone.conf`          | Servidor (permisos `600`) y gestor de contraseñas | Crear otra clave en el proveedor        | Revocarla en el proveedor. Los backups siguen cifrados.                                                                  |
+| Token de DuckDNS       | Gestor de contraseñas                             | Se ve en la cuenta de DuckDNS           | Regenerarlo en DuckDNS. Permite cambiar la IP del subdominio.                                                            |
 | Contraseña del panel   | Gestor de contraseñas. En la base, solo su hash   | `admin:password` desde el servidor      | `admin:password`, que además revoca todas las sesiones.                                                                  |
 
 - **Rotación:** cambiar el valor en el `.env` y aplicar con `docker compose up -d`.

@@ -120,7 +120,7 @@ El CI (GitHub Actions) ejecuta todo lo anterior y además:
 
 ## Producción
 
-Los pasos completos, la comparación de proveedores y lo que falta probar están en [docs/deploy.md](docs/deploy.md).
+Los pasos completos, la capacidad medida y lo que falta probar están en [docs/deploy.md](docs/deploy.md).
 
 ```sh
 docker compose -f compose.yaml -f compose.prod.yaml up -d --build

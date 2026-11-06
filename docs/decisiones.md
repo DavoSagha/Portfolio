@@ -380,3 +380,10 @@ Verificadas con `npm view` (2026-11) y fijadas exactas (`save-exact`), con el lo
 - **Alternativas:** un botón con `aria-expanded` en un componente de cliente, que suma JavaScript a cada fila para lo que el navegador ya resuelve; columnas de CSS, que al desplegar una fila pueden mover tarjetas a otra columna; una grilla común, que deja huecos entre filas de tarjetas de distinto alto.
 - **Motivo:** `<details>` funciona con teclado y lector de pantalla, y también sin JavaScript. Las columnas fijas evitan huecos grandes y saltos al desplegar.
 - **Limitación:** un navegador sin `::details-content` despliega sin animación.
+
+## D-040. DonWeb y DuckDNS
+
+- **Decisión:** el sitio se publica en un DonWeb Cloud Server de 2 vCPU, 2 GB y 20 GB, por un mes, con un subdominio gratuito de DuckDNS. Las imágenes se construyen en el servidor.
+- **Alternativas:** construir en GitHub Actions y publicar en un registro, que en un repo privado choca con los 500 MB incluidos; un dominio propio desde el principio.
+- **Motivo:** la simulación con 2 GB y swap construyó y reconstruyó sin errores ni procesos matados por falta de memoria, y el pico de disco entra en 20 GB ([medición](deploy.md#entra-en-el-servidor)). El subdominio permite publicar sin costo, y cambiar a un dominio propio solo requiere DNS y dos variables.
+- **Limitación:** la simulación no reemplaza al hardware real. Si la construcción falla ahí, el plan B es construir en la PC.
