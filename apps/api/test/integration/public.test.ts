@@ -131,6 +131,18 @@ describe('API pública con el contenido del seed', () => {
     expect(res.body.role).toBeNull();
   });
 
+  it('las secciones verificadas se publican y las que escribe el autor quedan ocultas', async () => {
+    const carta = await request(ctx.app).get(
+      '/api/v1/public/projects/carta-digital-catedral-del-pisco',
+    );
+    expect(carta.body.architecture).toMatch(/Gemini/);
+    expect(carta.body).toMatchObject({ problem: null, challenges: null, learnings: null });
+
+    const appfut = await request(ctx.app).get('/api/v1/public/projects/appfut');
+    expect(appfut.body.solution).toMatch(/entran a la reserva/);
+    expect(appfut.body).toMatchObject({ learnings: null, limitations: null });
+  });
+
   it('la trayectoria se ordena por fecha descendente y vincula la certificación COBOL', async () => {
     const res = await request(ctx.app).get('/api/v1/public/timeline');
     const dates = res.body.map((e: { startDate: string }) => e.startDate);

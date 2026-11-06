@@ -179,6 +179,30 @@ export const projects: SeedProject[] = [
       summary:
         'PWA mobile first para organizar partidos de fútbol, con gestión de jugadores, pagos y suplentes.',
       role: 'Desarrollé la interfaz, la creación de partidos con código y link de invitación, y el inicio de sesión con Google. El flujo para sumarse, darse de baja o cambiar de equipo lo hicimos en conjunto.',
+      context:
+        'App para organizar partidos de fútbol amateur entre amigos (5 contra 5, 6 contra 6), con gestión de los pagos de la cancha mediante comprobantes.',
+      problem:
+        'El organizador necesita saber quién juega y quién pagó su parte de la cancha. Además, sumarse no puede obligar a los invitados a registrarse.',
+      solution: [
+        '- El organizador inicia sesión con Google, crea el partido y comparte un código o un link de invitación.',
+        '- Los jugadores se suman ingresando solo su nombre y entran a la reserva.',
+        '- Los equipos los arma el organizador, o cada jugador elige el suyo. Quienes quedan en un equipo son titulares y reparten el costo de la cancha.',
+        '- Si un titular se da de baja, el primero de la reserva ocupa su lugar automáticamente.',
+        '- Cada titular sube el comprobante o declara el pago sin comprobante, y el organizador lo confirma o lo rechaza.',
+      ].join('\n'),
+      architecture: [
+        '- Next.js 16 (App Router), con las escrituras resueltas en Server Actions.',
+        '- Supabase: Postgres con RLS y triggers; Auth, con Google para el organizador y sesiones anónimas para los jugadores; y Storage para los comprobantes.',
+      ].join('\n'),
+      decisions: [
+        '- Jugadores sin cuenta. Al principio se identificaban con un ID guardado en el navegador. Después pasaron a usar una sesión anónima de Supabase, así las reglas de RLS se aplican con una identidad firmada.',
+        '- Pagos. Solo el organizador puede confirmar un pago. Lo que marca el jugador queda como "pendiente de confirmación".',
+        '- Redirecciones. El callback del inicio de sesión solo acepta redirecciones a rutas internas.',
+      ].join('\n'),
+      challenges: [
+        '- El inicio de sesión con Google.',
+        '- Recuperar el acceso con el nombre cuando se borra la caché del navegador.',
+      ].join('\n'),
     },
   },
   {
@@ -199,6 +223,27 @@ export const projects: SeedProject[] = [
       role: '',
       disclaimer:
         'Proyecto personal ofrecido al restaurante. No fue contratado ni implementado, y no tiene afiliación con La Catedral del Pisco.',
+      context:
+        'Carta digital para un restaurante de cocina peruana en Buenos Aires. El comensal escanea un QR en la mesa y abre la carta de su sucursal.',
+      solution: [
+        '- Carta en español, inglés, portugués y ruso.',
+        '- Asistente de chat que responde sobre alérgenos e ingredientes.',
+        '- Panel de administración para gestionar productos, precios y disponibilidad por sucursal, y un panel para el personal.',
+      ].join('\n'),
+      architecture: [
+        '- React 19 con Vite en el cliente.',
+        '- Express como servidor: expone /api/chat y, en producción, sirve los archivos estáticos.',
+        '- Supabase: Postgres con RLS, Auth y Storage para las imágenes.',
+        '- El asistente llama a la API de Gemini desde el servidor.',
+      ].join('\n'),
+      decisions: [
+        '- Clave de Gemini. El navegador nunca la ve: el cliente le escribe al propio Express, y es el servidor el que llama al modelo.',
+        '- Respuestas del asistente. El prompt lo limita a los datos de la carta. No puede inventar platos, precios ni alérgenos, y ante una duda deriva al mozo.',
+        '- Abuso del endpoint de chat. Solo se aceptan mensajes de usuario y de asistente, para que no se pueda inyectar un mensaje de sistema. Hay un límite de consultas por IP y de largo por mensaje.',
+        '- Roles. Los roles de administración se leen de app_metadata, que el usuario no puede modificar, en vez de user_metadata, que sí puede.',
+      ].join('\n'),
+      limitations:
+        'El límite de consultas vive en memoria y es por proceso: con varias instancias, cada una lleva su propia cuenta.',
     },
   },
   {
