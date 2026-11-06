@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { Breadcrumb } from '@/components/breadcrumb';
 import { ProjectDetailView } from '@/components/project-detail';
 import { Container } from '@/components/ui';
 import { api } from '@/lib/api';
@@ -32,9 +32,13 @@ export default async function ProjectPage({ params }: Props) {
 
   return (
     <Container className="py-12 sm:py-16">
-      <p className="text-sm">
-        <Link href="/proyectos">← Todos los proyectos</Link>
-      </p>
+      <Breadcrumb
+        items={[
+          { href: '/', label: 'Inicio' },
+          { href: '/proyectos', label: 'Proyectos' },
+        ]}
+        current={project.title}
+      />
       <ProjectDetailView project={project} />
     </Container>
   );
