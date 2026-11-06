@@ -88,7 +88,7 @@ describe('API pública con el contenido del seed', () => {
     });
     expect(ok.body.stack).toContain('Supabase (Postgres, Auth, Storage, RLS)');
     // Las secciones sin contenido confirmado vuelven en null y la web no las muestra.
-    expect(ok.body.problem).toBeNull();
+    expect(ok.body.learnings).toBeNull();
 
     await db.project.update({ where: { slug: 'appfut' }, data: { status: 'DRAFT' } });
     expect((await request(ctx.app).get('/api/v1/public/projects/appfut')).status).toBe(404);
